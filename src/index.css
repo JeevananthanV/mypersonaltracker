@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --color-primary: #2563EB;
+    --color-secondary: #10B981;
+    --color-accent: #8B5CF6;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-bg: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #64748B;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #F8FAFC;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: #0F172A;
+  }
+}
+
+/* Custom Clean Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Reference Card Surface */
+.card-white {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-white-hover:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Backward compatibility for glass-panel elements to seamlessly adapt to light theme */
+.glass-panel {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+  color: #0F172A;
+}
+
+.glass-panel-hover:hover {
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Sidebar Custom Styling (Dark Sidebar from Reference UI) */
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94A3B8;
+  transition: all 0.15s ease-in-out;
+}
+
+.sidebar-nav-item:hover {
+  color: #F8FAFC;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-nav-item.active {
+  color: #FFFFFF;
+  background-color: #1E293B;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+}
+
+/* Modal and Form Light Controls */
+.modal-light {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+.modal-light input,
+.modal-light select,
+.modal-light textarea {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+  border-radius: 0.5rem;
+}
+
+.modal-light input:focus,
+.modal-light select:focus,
+.modal-light textarea:focus {
+  background-color: #FFFFFF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  outline: none;
+}
+
+.modal-light label {
+  color: #475569 !important;
+  font-weight: 500;
+}
