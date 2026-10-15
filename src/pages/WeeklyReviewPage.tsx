@@ -13,6 +13,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { useLifeOS } from '../context/LifeOSContext';
+import { getLiveWeekRange } from '../utils/date-utils';
 
 export const WeeklyReviewPage: React.FC = () => {
   const {
@@ -28,7 +29,7 @@ export const WeeklyReviewPage: React.FC = () => {
   const [newReviewOpen, setNewReviewOpen] = useState(false);
 
   // Form state for Sunday review
-  const [weekRange, setWeekRange] = useState('Oct 12 - Oct 18, 2026');
+  const [weekRange, setWeekRange] = useState(getLiveWeekRange());
   const [completedSummary, setCompletedSummary] = useState('');
   const [skillsLearned, setSkillsLearned] = useState('');
   const [whatWentWrong, setWhatWentWrong] = useState('');

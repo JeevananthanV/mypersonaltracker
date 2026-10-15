@@ -32,6 +32,7 @@ import {
 } from 'recharts';
 import { useLifeOS } from '../context/LifeOSContext';
 import { QuickAddModal } from '../components/QuickAddModal';
+import { getLiveDateString, getLiveFormattedDate } from '../utils/date-utils';
 
 export const DashboardPage: React.FC = () => {
   const {
@@ -65,7 +66,7 @@ export const DashboardPage: React.FC = () => {
 
   // Safe daily spend calculations
   const safeDailySpendCap = 600; // ₹600 safe daily spend limit
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLiveDateString();
   const todayTransactions = transactions.filter(t => t.date === todayStr && t.type === 'expense');
   const todaySpent = todayTransactions.reduce((acc, t) => acc + t.amount, 0);
 

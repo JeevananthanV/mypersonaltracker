@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { IndianRupee } from 'lucide-react';
+import { getLiveMonthString } from '../utils/date-utils';
 
 export interface BillRecord {
   id: string;
@@ -143,7 +144,7 @@ export const FinanceCalendar: React.FC = ({
 
   // Current month state
   const [currentMonth, setCurrentMonth] = React.useState<string>(
-    new Date().toISOString().substring(0, 7)
+    getLiveMonthString()
   );
 
   // Helper functions

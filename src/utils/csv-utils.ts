@@ -3,6 +3,7 @@
 // Handles import, validation, duplicate detection, and export
 
 import { IncomeRecord, ExpenseRecord, LoanPaymentRecord, TransactionType } from '../types/finance-types';
+import { getLiveDateString } from './date-utils';
 
 // =====================
 // CSV Row Interface
@@ -652,7 +653,7 @@ export function exportTransactionsCsv<
   }
 >(
   transactions: T[],
-  filename: string = `finance-export-${new Date().toISOString().split('T')[0]}.csv`
+  filename: string = `finance-export-${getLiveDateString()}.csv`
 ): void {
   const csvContent = generateCsvFromTransactions(transactions);
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

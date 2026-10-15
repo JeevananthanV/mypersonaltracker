@@ -40,6 +40,7 @@ import {
   initialWeeklyReviews,
   initialIdeas
 } from '../data/initialData';
+import { getLiveDateString, getYesterdayDateString } from '../utils/date-utils';
 
 interface LifeOSContextType {
   activeTab: NavTab;
@@ -607,7 +608,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (meetsRequirement) {
         const earnedBadge: Badge = {
           ...badge,
-          earnedAt: new Date().toISOString().split('T')[0]
+          earnedAt: getLiveDateString()
         };
         newEarnedBadges.push(earnedBadge);
         updated = true;
@@ -659,7 +660,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (meetsTarget && !achievement.earned) {
         setAchievements(prev => prev.map(a =>
           a.id === achievement.id 
-            ? { ...a, currentProgress: achievement.maxProgress, earned: true, earnedAt: new Date().toISOString().split('T')[0] }
+            ? { ...a, currentProgress: achievement.maxProgress, earned: true, earnedAt: getLiveDateString() }
             : a
         ));
         updated = true;
@@ -704,10 +705,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const updatedProgress = { ...progressTracker };
     
     // Update consecutive streak
-    const today = new Date(sessionData.date).toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const today = sessionData.date || getLiveDateString();
+    const yesterdayStr = getYesterdayDateString();
     
     if (sessionData.workoutType && sessionData.workoutType !== 'Rest Day') {
       let currentStreak = updatedProgress['consecutive_workout_streak'] || 0;
@@ -985,14 +984,14 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Skills
   const updateSkill = (id: string, updates: Partial<SkillModule>) => {
-    setSkills(prev => prev.map(s => s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString().split('T')[0] } : s));
+    setSkills(prev => prev.map(s => s.id === id ? { ...s, ...updates, updatedAt: getLiveDateString() } : s));
   };
 
   const addSkill = (skill: Omit<SkillModule, 'id' | 'updatedAt'>) => {
     const newSkill: SkillModule = {
       ...skill,
       id: 'sk-' + Date.now(),
-      updatedAt: new Date().toISOString().split('T')[0]
+      updatedAt: getLiveDateString()
     };
     setSkills(prev => [...prev, newSkill]);
   };
@@ -1010,7 +1009,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           ...s,
           practiceHours: newHours,
           status: newStatus,
-          updatedAt: new Date().toISOString().split('T')[0]
+          updatedAt: getLiveDateString()
         };
       }
       return s;
@@ -1061,7 +1060,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Habits
   const toggleHabitToday = (id: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLiveDateString();
     setHabits(prev => prev.map(h => {
       if (h.id === id) {
         const nextCompleted = !h.completedToday;
@@ -1137,7 +1136,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newIdea: IdeaNote = {
       ...idea,
       id: 'id-' + Date.now(),
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: getLiveDateString()
     };
     setIdeas(prev => [newIdea, ...prev]);
   };
@@ -1176,7 +1175,7 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `jeeva_life_os_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `jeeva_life_os_backup_${getLiveDateString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

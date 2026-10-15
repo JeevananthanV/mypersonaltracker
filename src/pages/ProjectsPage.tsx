@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLifeOS } from '../context/LifeOSContext';
 import { Project, ProjectStatus, ProjectType } from '../types';
+import { getLiveDateString } from '../utils/date-utils';
 
 export const ProjectsPage: React.FC = () => {
   const { projects, addProject, updateProject, deleteProject } = useLifeOS();
@@ -46,7 +47,7 @@ export const ProjectsPage: React.FC = () => {
       type,
       status,
       priority: 'high',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: getLiveDateString(),
       description,
       nextAction,
       techStack: techStack.split(',').map(s => s.trim()).filter(Boolean),

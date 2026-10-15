@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, PlusCircle, IndianRupee, Activity, CheckSquare, BrainCircuit, Lightbulb } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, PlusCircle, IndianRupee, Activity, CheckSquare, BrainCircuit, Lightbulb, Calendar } from 'lucide-react';
 import { useLifeOS } from '../context/LifeOSContext';
 import { ExpenseCategory, ExerciseType, PriorityLevel, TaskArea } from '../types';
+import { getLiveDateString } from '../utils/date-utils';
 
 interface QuickAddModalProps {
   isOpen: boolean;
@@ -29,23 +30,33 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({ isOpen, onClose, d
   const [txAmount, setTxAmount] = useState('');
   const [txType, setTxType] = useState<'expense' | 'salary'>('expense');
   const [txCategory, setTxCategory] = useState<ExpenseCategory>('Food & Groceries');
-  const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
+  const [txDate, setTxDate] = useState(getLiveDateString());
   const [txNotes, setTxNotes] = useState('');
 
   // Loan payment state
   const [selectedLoanId, setSelectedLoanId] = useState(loanAccounts[0]?.id || 'loan-1');
   const [loanPrincipal, setLoanPrincipal] = useState('8000');
   const [loanInterest, setLoanInterest] = useState('0');
-  const [loanDate, setLoanDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loanDate, setLoanDate] = useState(getLiveDateString());
   const [loanNotes, setLoanNotes] = useState('');
 
   // Task state
   const [taskTitle, setTaskTitle] = useState('');
   const [taskArea, setTaskArea] = useState<TaskArea>('Work');
   const [taskPriority, setTaskPriority] = useState<PriorityLevel>('medium');
-  const [taskDue, setTaskDue] = useState(new Date().toISOString().split('T')[0]);
+  const [taskDue, setTaskDue] = useState(getLiveDateString());
   const [taskMinutes, setTaskMinutes] = useState('30');
   const [taskIsTopThree, setTaskIsTopThree] = useState(false);
+
+  // Keep dates synchronized with current live date whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const liveToday = getLiveDateString();
+      setTxDate(liveToday);
+      setLoanDate(liveToday);
+      setTaskDue(liveToday);
+    }
+  }, [isOpen]);
 
   // Fitness state
   const [fitTitle, setFitTitle] = useState('Evening Walk & Posture Stretching');
@@ -110,7 +121,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({ isOpen, onClose, d
       });
     } else if (entryType === 'fitness') {
       addFitnessLog({
-        date: new Date().toISOString().split('T')[0],
+        date: getLiveDateString(),
         workoutTitle: fitTitle,
         exerciseType: fitType,
         durationMin: parseInt(fitDuration) || 20,

@@ -18,6 +18,7 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { NavTab } from '../types';
 import { checkBackendHealth, HealthResponse } from '../services/api';
+import { getLiveDateString } from '../utils/date-utils';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -38,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const [checkingBackend, setCheckingBackend] = React.useState(false);
 
   const pendingTasks = tasks.filter(
-    (t) => t.status !== 'completed' && t.dueDate === new Date().toISOString().split('T')[0]
+    (t) => t.status !== 'completed' && t.dueDate === getLiveDateString()
   ).length;
 
   const completedHabits = habits.filter((h) => h.completedToday).length;

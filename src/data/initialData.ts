@@ -15,6 +15,7 @@ import {
   Exercise,
   WorkoutRoutine,
 } from '../types';
+import { getLiveDateString } from '../utils/date-utils';
 
 // =====================
 // Salary & Loan Data (unchanged)
@@ -76,7 +77,7 @@ export const initialSkills: SkillModule[] = [
     resourceName: 'Python Official Docs & Typing',
     resourceUrl: 'https://docs.python.org/3/',
     notes: 'Focus on generators, decorators, async, and typing.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-2',
@@ -89,7 +90,7 @@ export const initialSkills: SkillModule[] = [
     resourceName: 'Pandas Masterclass & Kaggle',
     resourceUrl: 'https://pandas.pydata.org/',
     notes: 'Vectorization, groupby aggregations, handling missing data.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-3',
@@ -101,7 +102,7 @@ export const initialSkills: SkillModule[] = [
     targetHours: 35,
     resourceName: '3Blue1Brown & Khan Academy',
     notes: 'Matrix operations, eigenvalues, probability distributions.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-4',
@@ -113,7 +114,7 @@ export const initialSkills: SkillModule[] = [
     targetHours: 20,
     resourceName: 'Seaborn Documentation',
     notes: 'EDA correlation heatmaps, pairplots, distribution plots.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-5',
@@ -125,7 +126,7 @@ export const initialSkills: SkillModule[] = [
     targetHours: 40,
     resourceName: 'Hands-On Machine Learning',
     notes: 'Decision trees, Random Forest, XGBoost, cross-validation.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-6',
@@ -138,7 +139,7 @@ export const initialSkills: SkillModule[] = [
     resourceName: 'PyTorch Official Tutorials',
     resourceUrl: 'https://pytorch.org/tutorials/',
     notes: 'Tensors, autograd, building CNNs and custom loss functions.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-7',
@@ -150,7 +151,7 @@ export const initialSkills: SkillModule[] = [
     targetHours: 30,
     resourceName: 'FastAPI + Docker Guide',
     notes: 'Building low-latency inference endpoints, Docker containers.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   },
   {
     id: 'sk-8',
@@ -162,7 +163,7 @@ export const initialSkills: SkillModule[] = [
     targetHours: 45,
     resourceName: 'End-to-End Production ML Repos',
     notes: 'Build and deploy customer feedback sentiment classifier.',
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: getLiveDateString()
   }
 ];
 
@@ -1157,7 +1158,7 @@ export const initialIdeas: IdeaNote[] = [
     content: 'Never go to bed without writing at least 15 lines of Python or reading 1 ML paper abstract. Consistency beats intensity every single time.',
     tags: ['Mindset', 'AI/ML', 'Habits'],
     pinned: true,
-    createdAt: new Date().toISOString().split('T')[0]
+    createdAt: getLiveDateString()
   }
 ];
 

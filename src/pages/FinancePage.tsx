@@ -31,6 +31,14 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { QuickAddModal } from '../components/QuickAddModal';
 import { ExpenseCategory } from '../types';
+import {
+  getLiveDateString,
+  getLiveMonthString,
+  getLiveMonthFormatted,
+  getYesterdayDateString,
+  getDaysAgoDateString,
+  getLiveFormattedDate
+} from '../utils/date-utils';
 
 export const FinancePage: React.FC = () => {
   const {
@@ -54,8 +62,8 @@ export const FinancePage: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedLoanFilter, setSelectedLoanFilter] = useState<string>('all');
 
-  // Daily Tracker state
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Daily Tracker state with live local date
+  const todayStr = getLiveDateString();
   const [selectedDateFilter, setSelectedDateFilter] = useState<'today' | 'yesterday' | 'week' | 'month' | 'all'>('month');
   const [customDate, setCustomDate] = useState<string>(todayStr);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -144,7 +152,7 @@ export const FinancePage: React.FC = () => {
   const isHighRisk = simMonthlyLivingBudget < 5000;
 
   // Filtered transactions for Daily Tracker view
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const yesterdayStr = getYesterdayDateString();
   const filteredDailyTxs = transactions.filter(t => {
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -155,7 +163,7 @@ export const FinancePage: React.FC = () => {
     if (selectedDateFilter === 'today') return t.date === todayStr;
     if (selectedDateFilter === 'yesterday') return t.date === yesterdayStr;
     if (selectedDateFilter === 'week') {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+      const sevenDaysAgo = getDaysAgoDateString(7);
       return t.date >= sevenDaysAgo;
     }
     if (selectedDateFilter === 'month') return t.month === currentMonth;
@@ -695,7 +703,16 @@ export const FinancePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Date</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-slate-400">Date</label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomDate(getLiveDateString())}
+                    className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer"
+                  >
+                    Set Today
+                  </button>
+                </div>
                 <input
                   type="date"
                   required
@@ -719,19 +736,19 @@ export const FinancePage: React.FC = () => {
           {/* DATE FILTER BUTTONS & EXPENSES TABLE */}
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs">
+              <div className="flex flex-wrap gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs">
                 <button
                   onClick={() => setSelectedDateFilter('today')}
                   className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    selectedDateFilter === 'today' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    selectedDateFilter === 'today' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Today
+                  Today ({getLiveFormattedDate(new Date(), 'short')})
                 </button>
                 <button
                   onClick={() => setSelectedDateFilter('yesterday')}
                   className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    selectedDateFilter === 'yesterday' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    selectedDateFilter === 'yesterday' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Yesterday
@@ -739,7 +756,7 @@ export const FinancePage: React.FC = () => {
                 <button
                   onClick={() => setSelectedDateFilter('week')}
                   className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    selectedDateFilter === 'week' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    selectedDateFilter === 'week' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Last 7 Days
@@ -747,15 +764,15 @@ export const FinancePage: React.FC = () => {
                 <button
                   onClick={() => setSelectedDateFilter('month')}
                   className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    selectedDateFilter === 'month' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    selectedDateFilter === 'month' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  This Month
+                  This Month ({getLiveMonthFormatted()})
                 </button>
                 <button
                   onClick={() => setSelectedDateFilter('all')}
                   className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    selectedDateFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    selectedDateFilter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   All

@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { Calendar, Flame, CheckCircle2, TrendingDown, Target } from 'lucide-react';
+import { getLiveMonthString } from '../utils/date-utils';
 
 export interface WorkoutSession {
   id: string;
@@ -40,7 +41,7 @@ export const FitnessCalendar: React.FC<{
   currentMonth?: string;
 }> = ({
   sessions,
-  currentMonth = new Date().toISOString().substring(0, 7),
+  currentMonth = getLiveMonthString(),
 }) => {
   // Compute calendar data
   const calendarData = React.useMemo(() => {

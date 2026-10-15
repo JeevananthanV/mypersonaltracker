@@ -20,6 +20,7 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { NavTab } from '../types';
 import { checkBackendHealth, HealthResponse } from '../services/api';
+import { getLiveDateString } from '../utils/date-utils';
 
 export const Navbar: React.FC = () => {
   const {
@@ -37,7 +38,7 @@ export const Navbar: React.FC = () => {
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
 
-  const pendingTasksToday = tasks.filter(t => t.status !== 'completed' && t.dueDate === new Date().toISOString().split('T')[0]).length;
+  const pendingTasksToday = tasks.filter(t => t.status !== 'completed' && t.dueDate === getLiveDateString()).length;
 
   const refreshHealth = async () => {
     setCheckingBackend(true);

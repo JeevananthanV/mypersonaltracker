@@ -16,6 +16,7 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { QuickAddModal } from '../components/QuickAddModal';
 import { TaskArea, PriorityLevel } from '../types';
+import { getLiveDateString, getLiveFormattedDate } from '../utils/date-utils';
 
 export const TasksPage: React.FC = () => {
   const {
@@ -31,7 +32,7 @@ export const TasksPage: React.FC = () => {
   const [filterView, setFilterView] = useState<'today' | 'this_week' | 'all' | 'completed'>('today');
   const [filterArea, setFilterArea] = useState<string>('all');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLiveDateString();
 
   const topThree = tasks.filter(t => t.isTopThree);
 
@@ -79,9 +80,12 @@ export const TasksPage: React.FC = () => {
       {/* FEATURED: Today's Top 3 Priorities */}
       <div className="glass-panel p-6 rounded-3xl border border-indigo-500/25 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/30">
         <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <Target className="w-5 h-5 text-indigo-400" />
             <h2 className="text-base font-bold text-slate-100">☀️ Today's Top 3 Priorities</h2>
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium hidden sm:inline-flex">
+              {getLiveFormattedDate(new Date(), 'short')}
+            </span>
           </div>
           <span className="text-xs text-indigo-300 font-semibold">
             {topThree.filter(t => t.status === 'completed').length} of {topThree.length} Completed
@@ -185,7 +189,7 @@ export const TasksPage: React.FC = () => {
                 filterView === 'today' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Today
+              Today ({getLiveFormattedDate(new Date(), 'short')})
             </button>
             <button
               onClick={() => setFilterView('this_week')}
@@ -256,7 +260,17 @@ export const TasksPage: React.FC = () => {
                       <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-medium">
                         {t.area}
                       </span>
-                      <span>Due: {t.dueDate}</span>
+                      {t.dueDate === todayStr ? (
+                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+                          Due: Today
+                        </span>
+                      ) : t.dueDate < todayStr && t.status !== 'completed' ? (
+                        <span className="text-rose-400 font-bold bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20">
+                          Overdue ({t.dueDate})
+                        </span>
+                      ) : (
+                        <span>Due: {t.dueDate}</span>
+                      )}
                       <span>~{t.estimatedMinutes}m</span>
                       <span className={`capitalize font-semibold ${t.priority === 'high' ? 'text-rose-400' : 'text-amber-400'}`}>
                         {t.priority}
