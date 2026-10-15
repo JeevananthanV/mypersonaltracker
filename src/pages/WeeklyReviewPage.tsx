@@ -265,7 +265,7 @@ export const WeeklyReviewPage: React.FC = () => {
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
               <span className="font-bold text-indigo-300 block mb-2">Next Week Priorities:</span>
               <div className="space-y-1">
-                {r.nextWeekPriorities.map((p, idx) => (
+                {(r.nextWeekPriorities || []).map((p, idx) => (
                   <div key={idx} className="flex items-center space-x-2 text-slate-300">
                     <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                     <span>{p}</span>

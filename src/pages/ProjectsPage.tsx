@@ -52,6 +52,7 @@ export const ProjectsPage: React.FC = () => {
       techStack: techStack.split(',').map(s => s.trim()).filter(Boolean),
       repoUrl,
       liveUrl,
+      deadline: '',
       progressPercent: parseInt(progressPercent) || 50
     });
 
@@ -135,7 +136,7 @@ export const ProjectsPage: React.FC = () => {
 
               {/* Tech Stack */}
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {p.techStack.map((tech, idx) => (
+                {(p.techStack || []).map((tech, idx) => (
                   <span key={idx} className="px-2 py-0.5 rounded bg-slate-950 text-slate-400 text-[10px] font-mono border border-slate-800">
                     {tech}
                   </span>

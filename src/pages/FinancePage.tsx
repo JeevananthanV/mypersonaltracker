@@ -165,7 +165,7 @@ export const FinancePage: React.FC = () => {
   // Filtered loan payments
   const filteredLoanPayments = loanPayments.filter(lp => {
     if (selectedLoanFilter === 'all') return true;
-    return lp.loanId === selectedLoanFilter || lp.loanName.includes(selectedLoanFilter);
+    return lp.loanId === selectedLoanFilter || (lp.loanName && lp.loanName.includes(selectedLoanFilter));
   });
 
   // Quick Daily Add submit handler
