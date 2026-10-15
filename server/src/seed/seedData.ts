@@ -22,7 +22,7 @@ export const seedDatabase = async () => {
   
   if (mongoose.connection.readyState !== 1) {
     try {
-      await mongoose.connect(uri, { dbName });
+      await mongoose.connect(uri, { dbName } as any);
       console.log('Connected to MongoDB for initial check/seed...');
     } catch (err: any) {
       console.warn('Skipping DB auto-seed (MongoDB not reachable). Fallback mode active.');

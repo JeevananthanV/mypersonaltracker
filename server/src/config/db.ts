@@ -40,7 +40,7 @@ export const connectDB = async (): Promise<boolean> => {
     const conn = await mongoose.connect(uri, {
       dbName,
       serverSelectionTimeoutMS: 15000,
-    });
+    } as any);
     console.log(`✅ MongoDB Connected successfully: ${conn.connection.host}/${conn.connection.name}`);
     return true;
   } catch (error: any) {

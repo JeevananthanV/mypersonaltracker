@@ -19,7 +19,7 @@ app.use(cors({
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
+app.get('/', (req: any, res: any) => {
   res.json({
     message: "🚀 Jeeva's Life OS — Backend API",
     version: '1.0.0',

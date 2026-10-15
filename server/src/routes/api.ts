@@ -32,7 +32,7 @@ router.get('/health', (req: Request, res: Response) => {
 });
 
 // Database guard middleware: Fail fast if database is disconnected instead of 10s buffer hang
-router.use((req: Request, res: Response, next) => {
+router.use((req: Request, res: Response, next: any) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: 'MongoDB Atlas is currently disconnected or IP is not whitelisted. Using local storage mode.' });
   }
