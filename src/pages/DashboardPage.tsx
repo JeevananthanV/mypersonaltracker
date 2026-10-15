@@ -89,11 +89,19 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6 pb-12 animate-in fade-in duration-300">
       {/* 1. TODAY'S SUMMARY ROW (Matching Reference Exact Layout) */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-            Today's Summary
-          </h2>
-          <span className="text-emerald-600 text-xs font-semibold flex items-center space-x-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center space-x-2.5">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Today's Summary
+            </h2>
+            <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 text-[11px] font-medium text-slate-600">
+              <Calendar className="w-3 h-3 text-slate-400" />
+              <span>
+                {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+          </div>
+          <span className="text-emerald-600 text-xs font-semibold flex items-center space-x-1 self-start sm:self-auto">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>On Track</span>
           </span>
