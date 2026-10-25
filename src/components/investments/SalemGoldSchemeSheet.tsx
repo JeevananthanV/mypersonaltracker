@@ -73,6 +73,7 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
   // Filter mode: 'all' | 'paid' | 'backlog'
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'backlog'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sheetViewMode, setSheetViewMode] = useState<'table' | 'calendar'>('table');
 
   // Salem Market Live Price State
   const [salemRates, setSalemRates] = useState<SalemDailyRate>(() => getTodaySalemRate());
@@ -744,6 +745,34 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
               ))}
             </div>
 
+            {/* Table vs Calendar View Mode Toggle */}
+            <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+              <button
+                onClick={() => setSheetViewMode('table')}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                  sheetViewMode === 'table'
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View Official Passbook as Table"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Table</span>
+              </button>
+              <button
+                onClick={() => setSheetViewMode('calendar')}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                  sheetViewMode === 'calendar'
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View Official Passbook as 300-Day Scheme Calendar"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Calendar Grid</span>
+              </button>
+            </div>
+
             {/* Search Box */}
             <div className="relative w-full sm:w-56">
               <input
@@ -758,8 +787,9 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
           </div>
         </div>
 
-        {/* 5. OFFICIAL PASSBOOK LEDGER TABLE (DATE-BY-DATE AUTOMATED SCHEME VALUES) */}
-        <div className="overflow-x-auto rounded-xl border border-slate-800/80">
+        {/* 5. OFFICIAL PASSBOOK LEDGER (TABLE OR CALENDAR VIEW) */}
+        {sheetViewMode === 'table' ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-800/80">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-800 bg-[#090E1A] text-slate-400 font-bold uppercase text-[10px] tracking-wider">
@@ -920,8 +950,105 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
             </tbody>
           </table>
         </div>
+        ) : (
+          /* PASSBOOK SCHEME CALENDAR VIEW */
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2.5 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
+              {filteredRows.map(row => {
+                const showGold = activeSheetMetal === 'gold' || activeSheetMetal === 'dual';
+                const showSilver = activeSheetMetal === 'silver' || activeSheetMetal === 'dual';
 
-        {filteredRows.length > 100 && (
+                let cardBg = 'bg-slate-900/60 border-slate-800 text-slate-400';
+                if (row.isToday) {
+                  cardBg = 'bg-amber-950/60 border-amber-400 shadow-lg shadow-amber-500/20 ring-2 ring-amber-400/40 text-white animate-pulse';
+                } else if ((showGold && row.isGoldPaid) || (showSilver && row.isSilverPaid)) {
+                  cardBg = 'bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-400 text-emerald-200';
+                } else if ((showGold && row.isMissedGold) || (showSilver && row.isMissedSilver)) {
+                  cardBg = 'bg-rose-950/20 border-rose-500/30 hover:border-rose-400 text-rose-300';
+                }
+
+                return (
+                  <div
+                    key={`cal-card-${row.dayNum}`}
+                    className={`p-2.5 rounded-xl border transition flex flex-col justify-between space-y-1.5 select-none hover:scale-[1.02] ${cardBg}`}
+                  >
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="font-mono font-black text-amber-300">Day {row.dayNum}</span>
+                      <span className="text-slate-400 font-semibold">{row.weekday}</span>
+                    </div>
+
+                    <div className="text-xs font-black text-white">
+                      {row.dateFormatted}
+                    </div>
+
+                    {/* Gold Info */}
+                    {showGold && (
+                      <div className="text-[10px] space-y-0.5 pt-1 border-t border-slate-800/60">
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-amber-400 font-bold">22K Gold</span>
+                          <span className="text-slate-400">₹{row.salemGoldRate}/g</span>
+                        </div>
+                        <div className="font-mono text-emerald-400 font-semibold flex justify-between">
+                          <span>+{row.goldCalc.bonusTierPct}% Tier</span>
+                          <span>{row.goldCalc.totalWeightGrams.toFixed(4)}g</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400 flex justify-between font-mono">
+                          <span>Val:</span>
+                          <span className="text-white font-bold">{formatCurrency(row.goldCalc.currentValuationAtLiveRate)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Silver Info */}
+                    {showSilver && (
+                      <div className="text-[10px] space-y-0.5 pt-1 border-t border-slate-800/60">
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-cyan-400 font-bold">999 Silver</span>
+                          <span className="text-slate-400">₹{row.salemSilverRate}/g</span>
+                        </div>
+                        <div className="font-mono text-emerald-400 font-semibold flex justify-between">
+                          <span>+{row.silverCalc.bonusTierPct}% Tier</span>
+                          <span>{row.silverCalc.totalWeightGrams.toFixed(3)}g</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400 flex justify-between font-mono">
+                          <span>Val:</span>
+                          <span className="text-white font-bold">{formatCurrency(row.silverCalc.currentValuationAtLiveRate)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status Pill & Action */}
+                    <div className="pt-1 border-t border-slate-800/80 text-[10px] font-mono flex items-center justify-between">
+                      {((showGold && row.isGoldPaid) || (showSilver && row.isSilverPaid)) ? (
+                        <span className="text-emerald-400 font-bold flex items-center gap-0.5">
+                          <Check className="w-3 h-3" /> Paid
+                        </span>
+                      ) : row.isToday ? (
+                        <button
+                          onClick={() => onOpenQuickDeposit?.(row.dayNum, row.dateString, activeSheetMetal)}
+                          className="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[9px] w-full text-center"
+                        >
+                          + Pay Today
+                        </button>
+                      ) : ((showGold && row.isMissedGold) || (showSilver && row.isMissedSilver)) ? (
+                        <button
+                          onClick={() => onOpenQuickDeposit?.(row.dayNum, row.dateString, activeSheetMetal)}
+                          className="text-rose-400 font-bold hover:underline text-[9px]"
+                        >
+                          ⚠️ Backlog Pay
+                        </button>
+                      ) : (
+                        <span className="text-slate-600 font-medium">Scheduled</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {sheetViewMode === 'table' && filteredRows.length > 100 && (
           <p className="text-center text-xs text-slate-500 pt-2">
             Showing first 100 days of the 300-day scheme. Use search or status filter to inspect other days.
           </p>
