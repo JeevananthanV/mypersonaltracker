@@ -33,6 +33,7 @@ import { Card3D } from '../ui/Card3D';
 import { AnimatedCounter } from '../ui/AnimatedCounter';
 import { ScrollReveal } from '../ui/ScrollReveal';
 import { getLiveDateString } from '../../utils/date-utils';
+import { SalemGoldSchemeSheet } from './SalemGoldSchemeSheet';
 
 const formatCurrency = (val: number) => `₹${Math.round(val || 0).toLocaleString('en-IN')}`;
 
@@ -63,6 +64,9 @@ export const DailyPayChitDashboard: React.FC<DailyPayChitDashboardProps> = ({
   const schemeStartDateStr = '2026-10-15'; // Exact user specified start date
   const schemeStartDate = new Date(schemeStartDateStr);
   const minDailyTarget = 100; // ₹100 minimum daily investment target per metal
+
+  // Terminal View Mode: 'terminal' | 'salem_sheet'
+  const [activeTerminalTab, setActiveTerminalTab] = useState<'terminal' | 'salem_sheet'>('terminal');
 
   // Active Metal View Tab: 'combined' | 'gold' | 'silver'
   const [activeMetalTab, setActiveMetalTab] = useState<'combined' | 'gold' | 'silver'>('combined');
@@ -351,82 +355,140 @@ export const DailyPayChitDashboard: React.FC<DailyPayChitDashboardProps> = ({
 
   return (
     <div className="space-y-7 animate-fade-in pb-16 perspective-1000">
-      {/* 1. TOP HEADER BANNER */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#1F190B] via-[#10172D] to-[#080D1A] border border-amber-500/40 shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden">
-        {/* Glow background blooms */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 0. TOP VIEW MODE SWITCHER */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-2xl bg-[#0B101D] border border-slate-800 shadow-xl">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setActiveTerminalTab('terminal')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 active:scale-95 ${
+              activeTerminalTab === 'terminal'
+                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            <span>Daily Pay Terminal (₹100 Target)</span>
+          </button>
 
-        <div className="space-y-2 relative z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={onBackToOverview}
-              className="px-3 py-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Investments</span>
-            </button>
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 flex items-center gap-1.5 shadow-md">
-              <Award className="w-3.5 h-3.5" />
-              Daily Pay Chit Terminal (APP27SCTM)
+          <button
+            onClick={() => setActiveTerminalTab('salem_sheet')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 active:scale-95 ${
+              activeTerminalTab === 'salem_sheet'
+                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4 text-amber-400" />
+            <span>Official Salem Gold Sheet & Scheme Rates</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+              Live Salem
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-              Start: 15-Oct-2026
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              {activeTierBadge} (Days 1–75)
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <Coins className="w-7 h-7 text-amber-400 animate-pulse" />
-            <span>Pothys Swarna Mahal — Dual Gold & Silver Daily Chit</span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-            Target: <strong className="text-amber-300 font-bold">₹100 Gold + ₹100 Silver Daily</strong> starting{' '}
-            <strong className="text-white">15-Oct-2026</strong>. 300 deposit days with{' '}
-            <strong className="text-emerald-400 font-bold">+7% instant weight bonus</strong> and{' '}
-            <strong className="text-amber-300 font-bold">guaranteed 0% Wastage (VA) & 0% Making Charges</strong> on physical redemption.
-          </p>
+          </button>
         </div>
 
-        {/* Quick Header Actions */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10">
-          <button
-            onClick={() => handleExecutePayment('dual', 200, todayStr)}
-            className="px-4 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5 active:scale-95"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>⚡ Pay Today's Dual Combo (₹200)</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setPayMetal('gold');
-              setPayAmount(100);
-              setIsPayModalOpen(true);
-            }}
-            className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center space-x-1.5 active:scale-95"
-          >
-            <Coins className="w-4 h-4 text-amber-400" />
-            <span>Pay Gold (₹100)</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setPayMetal('silver');
-              setPayAmount(100);
-              setIsPayModalOpen(true);
-            }}
-            className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition flex items-center space-x-1.5 active:scale-95"
-          >
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            <span>Pay Silver (₹100)</span>
-          </button>
+        <div className="flex items-center space-x-2 text-xs font-mono text-amber-300 px-3 py-1 rounded-xl bg-slate-900 border border-slate-800">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>Salem Market: 22K ₹{goldLiveRate.toLocaleString('en-IN')}/g · Silver ₹{silverLiveRate.toFixed(2)}/g</span>
         </div>
       </div>
+
+      {activeTerminalTab === 'salem_sheet' ? (
+        <SalemGoldSchemeSheet
+          goldAsset={goldAsset}
+          silverAsset={silverAsset}
+          onRecordDailyPay={onRecordDailyPay}
+          onRecordDualPay={onRecordDualPay}
+          onOpenQuickDeposit={(dayNum, dateStr, metal) => {
+            handleOpenDayPay(dayNum, dateStr, metal);
+          }}
+        />
+      ) : (
+        <>
+          {/* 1. TOP HEADER BANNER */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-[#1F190B] via-[#10172D] to-[#080D1A] border border-amber-500/40 shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden">
+            {/* Glow background blooms */}
+            <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="space-y-2 relative z-10">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={onBackToOverview}
+                  className="px-3 py-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Investments</span>
+                </button>
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 flex items-center gap-1.5 shadow-md">
+                  <Award className="w-3.5 h-3.5" />
+                  Daily Pay Chit Terminal (APP27SCTM)
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  Start: 15-Oct-2026
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                  {activeTierBadge} (Days 1–75)
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                <Coins className="w-7 h-7 text-amber-400 animate-pulse" />
+                <span>Pothys Swarna Mahal — Dual Gold & Silver Daily Chit</span>
+              </h1>
+
+              <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+                Target: <strong className="text-amber-300 font-bold">₹100 Gold + ₹100 Silver Daily</strong> starting{' '}
+                <strong className="text-white">15-Oct-2026</strong>. 300 deposit days with{' '}
+                <strong className="text-emerald-400 font-bold">+7% instant weight bonus</strong> and{' '}
+                <strong className="text-amber-300 font-bold">guaranteed 0% Wastage (VA) & 0% Making Charges</strong> on physical redemption.
+              </p>
+            </div>
+
+            {/* Quick Header Actions */}
+            <div className="flex flex-wrap items-center gap-3 relative z-10">
+              <button
+                onClick={() => setActiveTerminalTab('salem_sheet')}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 transition flex items-center space-x-1.5 active:scale-95 shadow-md"
+                title="Open Salem Showroom Scheme Passbook Sheet"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-amber-400" />
+                <span>Salem Scheme Sheet</span>
+              </button>
+
+              <button
+                onClick={() => handleExecutePayment('dual', 200, todayStr)}
+                className="px-4 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>⚡ Pay Dual Combo (₹200)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPayMetal('gold');
+                  setPayAmount(100);
+                  setIsPayModalOpen(true);
+                }}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center space-x-1.5 active:scale-95"
+              >
+                <Coins className="w-4 h-4 text-amber-400" />
+                <span>Pay Gold (₹100)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPayMetal('silver');
+                  setPayAmount(100);
+                  setIsPayModalOpen(true);
+                }}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition flex items-center space-x-1.5 active:scale-95"
+              >
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>Pay Silver (₹100)</span>
+              </button>
+            </div>
+          </div>
 
       {/* 2. LIVE GOLD & SILVER SPOT RATE COMMAND & CONVERTER BAR */}
       <div className="p-5 rounded-2xl bg-[#0B101D] border border-slate-800 shadow-xl space-y-4">
@@ -1020,6 +1082,8 @@ export const DailyPayChitDashboard: React.FC<DailyPayChitDashboardProps> = ({
           </table>
         </div>
       </div>
+      </>
+      )}
 
       {/* 8. MODAL: QUICK DEPOSIT TERMINAL */}
       {isPayModalOpen && (

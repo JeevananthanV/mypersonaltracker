@@ -30,6 +30,7 @@ import {
   Clock,
   Wallet,
   FileText,
+  FileSpreadsheet,
   CheckCircle2,
   Star,
   Zap,
@@ -197,6 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       subMenus: [
         { id: 'overview', label: 'Portfolio Overview & Hub', icon: <BarChart3 className="w-3.5 h-3.5 text-amber-400" /> },
         { id: 'daily_chit', label: 'Daily Pay Chit Record', icon: <Flame className="w-3.5 h-3.5 text-amber-400" />, badge: '₹100/day' },
+        { id: 'salem_gold_sheet', label: 'Salem Gold Sheet & Scheme Rates', icon: <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />, badge: 'Salem Live' },
         { id: 'digi_gold', label: 'Digital Gold (22K Pothys)', icon: <Coins className="w-3.5 h-3.5 text-yellow-400" />, badge: '0.0395g' },
         { id: 'digi_silver', label: 'Digital Silver (999 Pure)', icon: <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />, badge: '4.954g' },
         { id: 'groww_stocks', label: 'Groww Stocks (ITC & TATAGOLD)', icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />, badge: '₹1,821' },
@@ -381,6 +383,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     const separatePageMap: Record<string, NavTab> = {
       income: 'income',
       daily_chit: 'daily_chit',
+      salem_gold_sheet: 'salem_gold_sheet',
       digi_gold: 'digi_gold',
       digi_silver: 'digi_silver',
       groww_stocks: 'groww_stocks',

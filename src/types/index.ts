@@ -13,6 +13,7 @@ export type NavTab =
   | 'groww_stocks'
   | 'chits'
   | 'daily_chit'
+  | 'salem_gold_sheet'
   | 'mutual_funds'
   | 'finance' 
   | 'income'

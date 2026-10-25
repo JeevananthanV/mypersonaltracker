@@ -38,6 +38,7 @@ import { GrowwStocksDashboard } from '../components/investments/GrowwStocksDashb
 import { ChitSchemesDashboard } from '../components/investments/ChitSchemesDashboard';
 import { MutualFundsDashboard } from '../components/investments/MutualFundsDashboard';
 import { DailyPayChitDashboard } from '../components/investments/DailyPayChitDashboard';
+import { SalemGoldSchemeSheet } from '../components/investments/SalemGoldSchemeSheet';
 import { Card3D } from '../components/ui/Card3D';
 import { AnimatedCounter } from '../components/ui/AnimatedCounter';
 import { ScrollReveal } from '../components/ui/ScrollReveal';
@@ -102,11 +103,11 @@ export const InvestmentsPage: React.FC = () => {
 
   // Filter state
   const [activeDashboardTab, setActiveDashboardTab] = useState<
-    'overview' | 'daily_chit' | 'digi_gold' | 'digi_silver' | 'groww_stocks' | 'chits' | 'mutual_funds'
+    'overview' | 'daily_chit' | 'salem_gold_sheet' | 'digi_gold' | 'digi_silver' | 'groww_stocks' | 'chits' | 'mutual_funds'
   >('overview');
 
   useEffect(() => {
-    if (activeSubTab && ['overview', 'daily_chit', 'digi_gold', 'digi_silver', 'groww_stocks', 'chits', 'mutual_funds'].includes(activeSubTab)) {
+    if (activeSubTab && ['overview', 'daily_chit', 'salem_gold_sheet', 'digi_gold', 'digi_silver', 'groww_stocks', 'chits', 'mutual_funds'].includes(activeSubTab)) {
       setActiveDashboardTab(activeSubTab as any);
     }
   }, [activeSubTab]);
@@ -574,6 +575,13 @@ export const InvestmentsPage: React.FC = () => {
             icon: Flame,
             badge: '₹100/day Target',
             activeBg: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black shadow-lg shadow-amber-500/20'
+          },
+          {
+            id: 'salem_gold_sheet',
+            label: 'Salem Gold Sheet & Rates',
+            icon: FileSpreadsheet,
+            badge: 'Salem Live',
+            activeBg: 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-lg shadow-amber-500/20'
           },
           {
             id: 'digi_gold',
@@ -1995,6 +2003,23 @@ export const InvestmentsPage: React.FC = () => {
           }}
           onBackToOverview={() => setActiveDashboardTab('overview')}
           onOpenRulesModal={() => setIsSchemeRulesModalOpen(true)}
+        />
+      )}
+
+      {/* DASHBOARD: SALEM GOLD SHEET & LIVE MARKET RATES */}
+      {activeDashboardTab === 'salem_gold_sheet' && (
+        <SalemGoldSchemeSheet
+          goldAsset={investments.find(i => i.id === 'pothys-digi-gold' || i.category === 'digi_gold')}
+          silverAsset={investments.find(i => i.id === 'pothys-digi-silver' || i.category === 'silver_chit')}
+          onRecordDailyPay={(assetId, amount, date, notes, customRate, docNo) => {
+            recordDailyChitPayment(assetId, amount, date, notes, customRate, docNo);
+          }}
+          onRecordDualPay={(goldAmount, silverAmount, date, notes, gRate, sRate) => {
+            recordDualChitPayment(goldAmount, silverAmount, date, notes, gRate || goldSpotRate, sRate || silverSpotRate);
+          }}
+          onOpenQuickDeposit={(dayNum, dateStr, metal) => {
+            handleOpenDepositModal(metal === 'silver' ? 'pothys-digi-silver' : 'pothys-digi-gold');
+          }}
         />
       )}
 
