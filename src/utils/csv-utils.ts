@@ -453,50 +453,37 @@ export function splitLoanRepayment(
   let fees = 0;
 
   switch (interestType) {
+    case 'fixed_amount_arrangement':
+      // Fixed arrangement: monthly fixed ₹2,000 interest rule for all loans, no day interest
+      interest = Math.min(amount, 2000);
+      principal = Math.max(0, amount - interest);
+      fees = 0;
+      break;
+
     case 'reducing_balance':
-      // Simple: portion goes to principal, portion to interest
-      // In real usage, would need amortization schedule
       if (interestRate && currentPrincipal) {
         const monthlyInterest = (currentPrincipal * interestRate) / 100 / 12;
-        interest = Math.min(amount - monthlyInterest, amount * 0.3); // 30% default to interest
-        principal = amount - interest;
+        interest = Math.min(amount - monthlyInterest, 2000);
+        principal = Math.max(0, amount - interest);
         fees = 0;
       } else {
-        // Default split: 70% principal, 30% interest
-        principal = Math.round(amount * 0.7);
-        interest = Math.round(amount * 0.3);
+        interest = Math.min(amount, 2000);
+        principal = Math.max(0, amount - interest);
         fees = 0;
       }
       break;
 
     case 'flat_rate':
-      // Flat rate: interest calculated on original principal
-      // Typical: EMI = principal + (principal * rate * tenure)
-      if (interestRate) {
-        // Estimate: assume 50% principal, 50% interest for flat rate
-        principal = Math.round(amount * 0.5);
-        interest = Math.round(amount * 0.5);
-        fees = 0;
-      } else {
-        principal = Math.round(amount * 0.6);
-        interest = Math.round(amount * 0.3);
-        fees = Math.round(amount * 0.1);
-      }
-      break;
-
-    case 'fixed_amount_arrangement':
-      // Fixed arrangement: user-specified split
-      // Default reasonable split
-      principal = Math.round(amount * 0.75);
-      interest = Math.round(amount * 0.2);
-      fees = Math.round(amount * 0.05);
+      interest = Math.min(amount, 2000);
+      principal = Math.max(0, amount - interest);
+      fees = 0;
       break;
 
     default:
-      // Default split
-      principal = Math.round(amount * 0.7);
-      interest = Math.round(amount * 0.2);
-      fees = Math.round(amount * 0.1);
+      // Default monthly fixed ₹2,000 interest rule
+      interest = Math.min(amount, 2000);
+      principal = Math.max(0, amount - interest);
+      fees = 0;
       break;
   }
 

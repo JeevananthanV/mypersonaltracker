@@ -1,25 +1,64 @@
-// Navigation Tabs
+// Navigation Tabs & Separate Pages
 export type NavTab = 
   | 'dashboard' 
+  // Financial Trackers & Dedicated Pages
+  | 'loans'
+  | 'loan_waterfall'
+  | 'loan_amortization'
+  | 'loan_ledger'
+  | 'loan_simulator'
+  | 'investments'
+  | 'digi_gold'
+  | 'digi_silver'
+  | 'groww_stocks'
+  | 'chits'
+  | 'daily_chit'
+  | 'mutual_funds'
   | 'finance' 
-  | 'career' 
-  | 'tasks' 
+  | 'income'
+  | 'daily_expense'
+  | 'basic_needs'
+  // Health & Fitness Dedicated Pages
   | 'fitness' 
+  | 'weight_tracker'
+  | 'workout_log'
+  // Career & Tech Trackers & Pages
+  | 'career' 
+  | 'skills'
   | 'projects' 
-  | 'review' 
-  | 'ideas';
+  | 'ideas' 
+  // Productivity Trackers & Pages
+  | 'tasks' 
+  | 'habits'
+  | 'review';
 
-// 3 Separate Loan Accounts
+// Comprehensive Loan Account Interface
 export interface LoanAccount {
   id: string;
   name: string; // e.g., 'Loan 1 (₹1,00,000)', 'Loan 2 (₹1,00,000)', 'Loan 3 (₹40,000)'
+  lender?: string; // e.g., 'HDFC Bank', 'Canara Bank', 'Bajaj Finserv'
+  accountNumber?: string; // e.g., 'PL-908234-A', 'HL-2025-01'
+  loanType?: 'Personal Loan' | 'Hand Loan' | 'Vehicle Loan' | 'Education Loan' | 'Consumer Durable' | 'Credit Card EMI' | 'Other';
   originalPrincipal: number; // 100000, 100000, 40000
   currentPrincipal: number;
   interestPaidTotal: number;
   principalPaidTotal: number;
+  annualInterestRate?: number; // e.g. 11.5%
+  interestType?: 'reducing_balance' | 'flat' | 'fixed_amount' | 'zero_interest';
+  fixedInterestAmount?: number; // e.g. ₹2,000 for Loan 3
   estimatedEmi?: number;
+  monthlyEmi?: number;
+  tenureMonths?: number;
+  remainingTenureMonths?: number;
+  startDate?: string;
+  targetPayoffDate?: string;
+  dueDayOfMonth?: number; // e.g., 5th of each month
+  prepaymentAllowed?: boolean;
+  prepaymentCharges?: number;
   lenderNotes?: string;
   status: 'active' | 'closed';
+  priority?: 'high' | 'medium' | 'low';
+  colorTag?: string; // e.g. 'rose' | 'amber' | 'emerald' | 'indigo' | 'cyan'
 }
 
 export interface LoanPayment {
@@ -32,8 +71,22 @@ export interface LoanPayment {
   interestPaid: number;
   totalPaid: number;
   closingBalance: number;
+  paymentMethod?: 'UPI' | 'Bank Transfer' | 'Net Banking' | 'Auto-Debit' | 'Cash' | string;
+  referenceNumber?: string;
   notes?: string;
   totalCashPaid?: number;
+}
+
+export interface AmortizationScheduleRow {
+  monthIndex: number;
+  dateFormatted: string;
+  openingPrincipal: number;
+  emi: number;
+  principalComponent: number;
+  interestComponent: number;
+  extraPrepayment: number;
+  closingPrincipal: number;
+  cumulativeInterest: number;
 }
 
 // Transactions & Expenses
@@ -62,6 +115,127 @@ export interface Transaction {
   month: string; // YYYY-MM
   loanId?: string;
   notes?: string;
+}
+
+// Multi-Stream Income & Earnings Models (Salary, Freelancing, Part-Time, Side Gigs)
+export type IncomeCategory = 
+  | 'salary' 
+  | 'freelancing' 
+  | 'part_time' 
+  | 'investments_dividend' 
+  | 'side_gig' 
+  | 'other';
+
+export type IncomeFrequency = 'monthly' | 'one_time' | 'per_project' | 'hourly' | 'weekly';
+export type IncomeStatus = 'received' | 'invoiced' | 'in_progress' | 'scheduled' | 'overdue';
+
+export interface IncomeItem {
+  id: string;
+  title: string;
+  category: IncomeCategory;
+  sourceOrClient: string;
+  amount: number;
+  frequency: IncomeFrequency;
+  dateReceived?: string;
+  dueDateOrPayday?: string;
+  status: IncomeStatus;
+  hourlyRate?: number;
+  hoursWorked?: number;
+  projectMilestone?: string;
+  invoiceNumber?: string;
+  notes?: string;
+  colorTag?: 'emerald' | 'cyan' | 'amber' | 'indigo' | 'purple' | 'rose';
+}
+
+// Monthly Basic Needs & Pay Cycle Models
+export type BasicNeedCategory = 'Housing' | 'Food' | 'Utilities' | 'Transit' | 'Health' | 'Personal' | 'Other';
+export type PayCyclePhase = 'Phase 1 (Day 1-5)' | 'Phase 2 (Day 6-10)' | 'Phase 3 (Day 11-20)' | 'Phase 4 (Day 21-30)';
+
+export interface BasicNeedRequirement {
+  id: string;
+  name: string;
+  category: BasicNeedCategory;
+  amount: number;
+  dueDayOfMonth: number;
+  payCyclePhase: PayCyclePhase;
+  priority: 'essential' | 'flexible' | 'discretionary';
+  isPaid: boolean;
+  notes?: string;
+}
+
+// Investment Portfolio & Wealth Models
+export type InvestmentCategory = 
+  | 'digi_gold'       // Digital Gold (MMTC-PAMP, Jar, Safegold)
+  | 'gold_chit'       // Gold Chit / Monthly 11-Month Jeweller Scheme (Tanishq, Malabar, GRT)
+  | 'silver_chit'     // Silver Chit / Physical Silver Accumulation
+  | 'groww_stocks'    // Groww App Equity Stocks
+  | 'mutual_funds'    // Mutual Fund SIPs
+  | 'etf'             // Gold ETFs, Nifty BeES
+  | 'fixed_deposit'   // Bank FDs / Emergency Reserves
+  | 'crypto'          // Crypto assets
+  | 'other';
+
+// Bullion Transactions & Scheme Tracking Models (Pothys Swarna Mahal, DigiGold, DigiSilver)
+export interface BullionTransaction {
+  id: string;
+  date: string;
+  amount: number;
+  rate: number;
+  weightGrams: number;
+  bonusWeightGrams: number;
+  bonusPercentage: number;
+  docNo?: string;
+  promoCode?: string;
+  notes?: string;
+}
+
+export interface BullionSchemeDetails {
+  planName: string;
+  purity: string;
+  startDate: string;
+  depositTenureDays: number;
+  lockInDays: number;
+  maturityDate: string;
+  recommendedTarget: number;
+  baseWeightGrams: number;
+  bonusWeightGrams: number;
+  totalWeightGrams: number;
+  currentBonusTierPct: number;
+  activeDayIndex: number;
+  jewellerName: string;
+}
+
+export interface InvestmentAsset {
+  id: string;
+  name: string;
+  category: InvestmentCategory;
+  platform: string; // 'Pothys Swarna Mahal', 'Groww', 'MMTC-PAMP', 'Jar', 'Tanishq / Jeweller', 'Zerodha', 'Bank'
+  investedAmount: number;
+  currentValue: number;
+  quantity?: number; // e.g. grams of gold/silver or shares
+  unitType?: 'grams' | 'shares' | 'units' | 'chit_tokens' | 'lot';
+  buyPriceAverage?: number;
+  currentPrice?: number;
+  isMonthlySip: boolean;
+  monthlySipAmount?: number;
+  chitTenureMonths?: number; // e.g. 11 months
+  chitMonthsPaid?: number; // e.g. 6 of 11 paid
+  chitMonthlyAmount?: number; // e.g. ₹3,000 / month
+  maturityBonus?: number; // e.g. 1 month jeweller bonus discount
+  symbolOrCode?: string;
+  unrealizedGain?: number;
+  unrealizedGainPct?: number;
+  oneDayReturn?: number;
+  oneDayReturnPct?: number;
+  previousClosePrice?: number;
+  status?: 'active' | 'matured' | 'sold';
+  maturityDate?: string;
+  purchaseDate?: string;
+  notes?: string;
+  colorTag?: string;
+  updatedAt?: string;
+  schemeDetails?: BullionSchemeDetails;
+  transactions?: BullionTransaction[];
 }
 
 // AI/ML Career Center

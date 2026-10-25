@@ -23,13 +23,19 @@ import {
   IdeaNote,
   NavTab,
   Badge,
-  Achievement
+  Achievement,
+  BasicNeedRequirement,
+  InvestmentAsset,
+  BullionTransaction,
+  IncomeItem,
 } from '../types';
 import {
   INITIAL_SALARY,
   initialLoanAccounts,
   initialLoanPayments,
   initialTransactions,
+  initialBasicNeeds,
+  initialInvestments,
   initialSkills,
   initialCareerOverview,
   initialTasks,
@@ -38,15 +44,36 @@ import {
   initialFitnessLogs,
   initialProjects,
   initialWeeklyReviews,
-  initialIdeas
+  initialIdeas,
+  initialIncomeStreams
 } from '../data/initialData';
 import { getLiveDateString, getYesterdayDateString } from '../utils/date-utils';
 
 interface LifeOSContextType {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
+  activeSubTab: string;
+  setActiveSubTab: (subTab: string) => void;
+  navigateToTab: (tab: NavTab, subTab?: string) => void;
+  isQuickAddOpen: boolean;
+  setIsQuickAddOpen: (open: boolean) => void;
+  quickAddDefaultType: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea';
+  setQuickAddDefaultType: (type: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea') => void;
+  openQuickAdd: (type?: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea') => void;
   salary: number;
   setSalary: (salary: number) => void;
+
+  // Multi-Stream Income & Earnings Monitor
+  incomeStreams: IncomeItem[];
+  addIncomeStream: (item: Omit<IncomeItem, 'id'>) => void;
+  updateIncomeStream: (id: string, updates: Partial<IncomeItem>) => void;
+  deleteIncomeStream: (id: string) => void;
+  markIncomeReceived: (id: string, syncToFinance?: boolean) => void;
+  quickCreditSalary: (monthStr?: string) => void;
+  totalReceivedIncome: number;
+  totalPendingReceivables: number;
+  totalFreelanceEarnings: number;
+  totalPartTimeEarnings: number;
 
   // Separate Loans
   loanAccounts: LoanAccount[];
@@ -63,12 +90,65 @@ interface LifeOSContextType {
   // Loan Payments
   loanPayments: LoanPayment[];
   addLoanPayment: (payment: Omit<LoanPayment, 'id' | 'totalPaid' | 'closingBalance'>) => void;
+  updateLoanPayment: (id: string, updates: Partial<LoanPayment>) => void;
   deleteLoanPayment: (id: string) => void;
 
   // Transactions
   transactions: Transaction[];
   addTransaction: (tx: Omit<Transaction, 'id' | 'month'>) => void;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
+
+  // Monthly Basic Needs & Pay Cycle Requirements
+  basicNeeds: BasicNeedRequirement[];
+  addBasicNeed: (need: Omit<BasicNeedRequirement, 'id'>) => void;
+  updateBasicNeed: (id: string, updates: Partial<BasicNeedRequirement>) => void;
+  deleteBasicNeed: (id: string) => void;
+  toggleBasicNeedPaid: (id: string) => void;
+  totalBasicNeedsBudget: number;
+  totalBasicNeedsPaid: number;
+
+  // Investment & Wealth Portfolio (Digi Gold, Gold Chit, Silver Chit, Groww Stocks & MFs)
+  investments: InvestmentAsset[];
+  addInvestment: (asset: Omit<InvestmentAsset, 'id' | 'updatedAt'>) => void;
+  updateInvestment: (id: string, updates: Partial<InvestmentAsset>) => void;
+  deleteInvestment: (id: string) => void;
+  payChitInstallment: (id: string) => void;
+  addBullionTransaction: (assetId: string, tx: Omit<BullionTransaction, 'id'>) => void;
+  deleteBullionTransaction: (assetId: string, txId: string) => void;
+  recordDailyChitPayment: (
+    assetId: string,
+    amount: number,
+    date?: string,
+    notes?: string,
+    rate?: number,
+    docNo?: string
+  ) => void;
+  recordDualChitPayment: (
+    goldAmount?: number,
+    silverAmount?: number,
+    date?: string,
+    notes?: string,
+    goldRate?: number,
+    silverRate?: number
+  ) => void;
+  batchPayChitDays: (
+    payments: { assetId: string; amount: number; date: string; customRate?: number; notes?: string }[]
+  ) => void;
+  updateStockPrice: (assetId: string, currentPrice: number) => void;
+  totalInvestedCapital: number;
+  totalPortfolioValue: number;
+  totalInvestmentReturns: number;
+  totalInvestmentReturnsPct: number;
+  monthlyInvestmentOutflow: number;
+  growwSummary: {
+    totalInvested: number;
+    totalCurrent: number;
+    totalReturns: number;
+    totalReturnsPct: number;
+    oneDayReturns: number;
+    oneDayReturnsPct: number;
+  };
 
   // Career
   skills: SkillModule[];
@@ -137,21 +217,86 @@ interface LifeOSContextType {
   resetToCleanRealState: () => void;
 }
 
-// Version 2 storage key to ensure no legacy mock data is loaded
-const STORAGE_KEY = 'jeeva_life_os_real_v2';
+// Version 10 storage key with monthly fixed ₹2,000 interest rule for all loans & zero day interest calculation
+const STORAGE_KEY = 'jeeva_life_os_real_zero_v10';
 
 const LifeOSContext = createContext<LifeOSContextType | undefined>(undefined);
 
 export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState<string>('');
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState<boolean>(false);
+  const [quickAddDefaultType, setQuickAddDefaultType] = useState<
+    'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea'
+  >('expense');
+
+  const openQuickAdd = (type?: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea') => {
+    if (type) {
+      setQuickAddDefaultType(type);
+    }
+    setIsQuickAddOpen(true);
+  };
+
+  const navigateToTab = (tab: NavTab, subTab?: string) => {
+    setActiveTab(tab);
+    if (subTab !== undefined) {
+      setActiveSubTab(subTab);
+    }
+  };
+
   const [salary, setSalary] = useState<number>(INITIAL_SALARY);
 
-  // Load state from local storage
+  // Load state from local storage and purge any old legacy mock/dummy data
   const loadState = () => {
     try {
+      // Clear out all older legacy keys to guarantee no mock data cross-contamination
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('jeeva_life_os_') && k !== STORAGE_KEY) {
+          localStorage.removeItem(k);
+        }
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Guarantee no dummy mock investments
+        if (parsed.investments && Array.isArray(parsed.investments)) {
+          parsed.investments = parsed.investments.filter((i: any) =>
+            !['inv-1', 'inv-2', 'inv-3', 'inv-4', 'inv-5', 'inv-6'].includes(i.id) &&
+            !i.name?.includes('MMTC-PAMP') &&
+            !i.name?.includes('Tata Motors') &&
+            !i.name?.includes('Parag Parikh') &&
+            !i.name?.includes('Nippon India') &&
+            !i.name?.includes('GRT 11-Month') &&
+            !i.name?.includes('Lalitha 11-Month')
+          );
+        }
+        // Guarantee no dummy mock basic needs
+        if (parsed.basicNeeds && Array.isArray(parsed.basicNeeds)) {
+          parsed.basicNeeds = parsed.basicNeeds.filter((n: any) =>
+            !['bn-1', 'bn-2', 'bn-3', 'bn-4', 'bn-5'].includes(n.id) &&
+            !n.name?.includes('House Rent') &&
+            !n.name?.includes('Monthly Groceries') &&
+            !n.name?.includes('Mother Support')
+          );
+        }
+        // Guarantee no simulated fitness logs
+        if (parsed.fitnessLogs && Array.isArray(parsed.fitnessLogs)) {
+          parsed.fitnessLogs = parsed.fitnessLogs.filter((f: any) => !f.id?.startsWith('log-'));
+        }
+        // Guarantee no dummy loan payments
+        if (parsed.loanPayments && Array.isArray(parsed.loanPayments)) {
+          parsed.loanPayments = parsed.loanPayments.filter((p: any) =>
+            !p.notes?.includes('Auto-Debit') &&
+            !p.notes?.includes('Direct UPI') &&
+            !p.notes?.includes('aruna') &&
+            !p.notes?.includes('Sample') &&
+            !p.referenceNumber?.includes('aruna') &&
+            !p.referenceNumber?.includes('Auto-Debit')
+          );
+        }
+        return parsed;
       }
     } catch (e) {
       console.error('Failed to parse localStorage', e);
@@ -161,9 +306,44 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const savedData = loadState();
 
-  const [loanAccounts, setLoanAccounts] = useState<LoanAccount[]>(savedData?.loanAccounts || initialLoanAccounts);
-  const [loanPayments, setLoanPayments] = useState<LoanPayment[]>(savedData?.loanPayments || initialLoanPayments);
+  const [loanPayments, setLoanPayments] = useState<LoanPayment[]>(() => {
+    const raw = savedData?.loanPayments || initialLoanPayments;
+    return raw.filter((p: any) =>
+      !p.notes?.includes('Auto-Debit') &&
+      !p.notes?.includes('Direct UPI') &&
+      !p.notes?.includes('aruna') &&
+      !p.notes?.includes('Sample') &&
+      !p.referenceNumber?.includes('aruna') &&
+      !p.referenceNumber?.includes('Auto-Debit')
+    );
+  });
+
+  const [loanAccounts, setLoanAccounts] = useState<LoanAccount[]>(() => {
+    // If no real payments logged, use clean initial loan figures with 0 paid
+    if (loanPayments.length === 0) {
+      return initialLoanAccounts;
+    }
+    const raw = savedData?.loanAccounts || initialLoanAccounts;
+    return raw.map((loan: LoanAccount) => {
+      const match = initialLoanAccounts.find(d => d.id === loan.id);
+      const base = match ? { ...match, ...loan } : loan;
+      if (!base.fixedInterestAmount || base.fixedInterestAmount === 0) {
+        base.fixedInterestAmount = 2000;
+        base.interestType = 'fixed_amount';
+      }
+      return base;
+    });
+  });
   const [transactions, setTransactions] = useState<Transaction[]>(savedData?.transactions || initialTransactions);
+  const [basicNeeds, setBasicNeeds] = useState<BasicNeedRequirement[]>(savedData?.basicNeeds || initialBasicNeeds);
+  const [investments, setInvestments] = useState<InvestmentAsset[]>(() => {
+    const raw = savedData?.investments;
+    if (raw && Array.isArray(raw) && raw.length > 0) {
+      const missingInitial = initialInvestments.filter(init => !raw.some((r: any) => r.id === init.id));
+      return [...raw, ...missingInitial];
+    }
+    return initialInvestments;
+  });
   const [skills, setSkills] = useState<SkillModule[]>(savedData?.skills || initialSkills);
   const [careerOverview, setCareerOverview] = useState<CareerOverview>(savedData?.careerOverview || initialCareerOverview);
   const [tasks, setTasks] = useState<Task[]>(savedData?.tasks || initialTasks);
@@ -173,6 +353,14 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [projects, setProjects] = useState<Project[]>(savedData?.projects || initialProjects);
   const [weeklyReviews, setWeeklyReviews] = useState<WeeklyReview[]>(savedData?.weeklyReviews || initialWeeklyReviews);
   const [ideas, setIdeas] = useState<IdeaNote[]>(savedData?.ideas || initialIdeas);
+  const [incomeStreams, setIncomeStreams] = useState<IncomeItem[]>(() => {
+    const raw = savedData?.incomeStreams;
+    if (raw && Array.isArray(raw) && raw.length > 0) {
+      const missingInitial = initialIncomeStreams.filter(init => !raw.some((r: any) => r.id === init.id));
+      return [...raw, ...missingInitial];
+    }
+    return initialIncomeStreams;
+  });
 
   // Badge & Achievements System state
   const [badges, setBadges] = useState<Badge[]>(savedData?.badges || []);
@@ -817,6 +1005,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       loanAccounts,
       loanPayments,
       transactions,
+      basicNeeds,
+      investments,
       skills,
       careerOverview,
       tasks,
@@ -825,14 +1015,15 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fitnessLogs,
       projects,
       weeklyReviews,
-      ideas
+      ideas,
+      incomeStreams
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (err) {
       console.error('Could not save to localStorage', err);
     }
-  }, [salary, loanAccounts, loanPayments, transactions, skills, careerOverview, tasks, habits, fitnessProfile, fitnessLogs, projects, weeklyReviews, ideas]);
+  }, [salary, loanAccounts, loanPayments, transactions, basicNeeds, investments, skills, careerOverview, tasks, habits, fitnessProfile, fitnessLogs, projects, weeklyReviews, ideas, incomeStreams]);
 
   // Initial load from MongoDB Atlas backend if reachable
   useEffect(() => {
@@ -891,9 +1082,13 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       currentPrincipal: account.originalPrincipal,
       interestPaidTotal: 0,
       principalPaidTotal: 0,
+      interestType: account.interestType || 'fixed_amount',
+      fixedInterestAmount: account.fixedInterestAmount !== undefined ? account.fixedInterestAmount : 2000,
+      annualInterestRate: 0,
       status: 'active'
     };
     setLoanAccounts(prev => [...prev, newAccount]);
+    triggerConfetti();
   };
 
   const updateLoanAccount = (id: string, updates: Partial<LoanAccount>) => {
@@ -902,6 +1097,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteLoanAccount = (id: string) => {
     setLoanAccounts(prev => prev.filter(l => l.id !== id));
+    // Also remove any payments associated with this loan
+    setLoanPayments(prev => prev.filter(p => p.loanId !== id));
   };
 
   // Loan Payment Operations (Separate per loan)
@@ -961,8 +1158,81 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     triggerConfetti();
   };
 
+  // Update existing loan payment & recalculate loan balances
+  const updateLoanPayment = (id: string, updates: Partial<LoanPayment>) => {
+    setLoanPayments(prev => {
+      const old = prev.find(p => p.id === id);
+      if (!old) return prev;
+
+      const newPrincipal = updates.principalPaid !== undefined ? Number(updates.principalPaid) : old.principalPaid;
+      const newInterest = updates.interestPaid !== undefined ? Number(updates.interestPaid) : old.interestPaid;
+      const diffPrincipal = newPrincipal - old.principalPaid;
+      const diffInterest = newInterest - old.interestPaid;
+
+      // Update the loan account balance cleanly
+      const loanId = updates.loanId || old.loanId;
+      if (loanId) {
+        setLoanAccounts(lPrev => lPrev.map(l => {
+          if (l.id === loanId || l.name === old.loanName) {
+            const nextCurrent = Math.max(0, l.currentPrincipal - diffPrincipal);
+            return {
+              ...l,
+              currentPrincipal: nextCurrent,
+              principalPaidTotal: Math.max(0, l.principalPaidTotal + diffPrincipal),
+              interestPaidTotal: Math.max(0, l.interestPaidTotal + diffInterest),
+              status: nextCurrent === 0 ? 'closed' : 'active'
+            };
+          }
+          return l;
+        }));
+      }
+
+      return prev.map(p => {
+        if (p.id === id) {
+          const tot = newPrincipal + newInterest;
+          const openBal = updates.openingBalance !== undefined ? updates.openingBalance : p.openingBalance;
+          return {
+            ...p,
+            ...updates,
+            principalPaid: newPrincipal,
+            interestPaid: newInterest,
+            totalPaid: tot,
+            closingBalance: Math.max(0, openBal - newPrincipal)
+          };
+        }
+        return p;
+      });
+    });
+    triggerConfetti();
+  };
+
+  // Delete loan payment & accurately restore loan principal balance
   const deleteLoanPayment = (id: string) => {
-    setLoanPayments(prev => prev.filter(p => p.id !== id));
+    setLoanPayments(prev => {
+      const target = prev.find(p => p.id === id);
+      if (target) {
+        // Restore loan balance
+        setLoanAccounts(lPrev => lPrev.map(l => {
+          if (l.id === target.loanId || l.name === target.loanName) {
+            const restoredPrincipal = l.currentPrincipal + (target.principalPaid || 0);
+            return {
+              ...l,
+              currentPrincipal: restoredPrincipal,
+              principalPaidTotal: Math.max(0, l.principalPaidTotal - (target.principalPaid || 0)),
+              interestPaidTotal: Math.max(0, l.interestPaidTotal - (target.interestPaid || 0)),
+              status: restoredPrincipal > 0 ? 'active' : l.status
+            };
+          }
+          return l;
+        }));
+
+        // Remove linked transactions
+        setTransactions(tPrev => tPrev.filter(t => 
+          !(t.loanId === target.loanId && t.date === target.date && (t.category === 'Loan Principal' || t.category === 'Loan Interest'))
+        ));
+      }
+      return prev.filter(p => p.id !== id);
+    });
   };
 
   // Transaction operations
@@ -977,10 +1247,452 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     saveTransactionToBackend(newTx).catch(() => {});
   };
 
+  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
+    setTransactions(prev => prev.map(t => {
+      if (t.id === id) {
+        const date = updates.date || t.date;
+        const month = date.substring(0, 7);
+        const updated = { ...t, ...updates, month };
+        saveTransactionToBackend(updated).catch(() => {});
+        return updated;
+      }
+      return t;
+    }));
+  };
+
   const deleteTransaction = (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
     deleteTransactionFromBackend(id).catch(() => {});
   };
+
+  // Multi-Stream Income Operations
+  const addIncomeStream = (item: Omit<IncomeItem, 'id'>) => {
+    const newItem: IncomeItem = {
+      ...item,
+      id: 'inc-' + Date.now()
+    };
+    setIncomeStreams(prev => [newItem, ...prev]);
+
+    if (newItem.status === 'received') {
+      const liveDate = newItem.dateReceived || getLiveDateString();
+      const month = liveDate.substring(0, 7);
+      const newTx: Transaction = {
+        id: 'tx-inc-' + Date.now(),
+        title: `[INCOME] ${newItem.title} (${newItem.sourceOrClient})`,
+        amount: Number(newItem.amount),
+        type: 'salary',
+        category: 'Salary',
+        date: liveDate,
+        month,
+        notes: newItem.notes || `Income credited from ${newItem.sourceOrClient}`
+      };
+      setTransactions(prev => [newTx, ...prev]);
+    }
+    triggerConfetti();
+  };
+
+  const updateIncomeStream = (id: string, updates: Partial<IncomeItem>) => {
+    setIncomeStreams(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const deleteIncomeStream = (id: string) => {
+    setIncomeStreams(prev => prev.filter(item => item.id !== id));
+  };
+
+  const markIncomeReceived = (id: string, syncToFinance: boolean = true) => {
+    const today = getLiveDateString();
+    const item = incomeStreams.find(i => i.id === id);
+    if (!item) return;
+
+    setIncomeStreams(prev => prev.map(i => i.id === id ? { ...i, status: 'received', dateReceived: today } : i));
+
+    if (syncToFinance) {
+      const month = today.substring(0, 7);
+      const newTx: Transaction = {
+        id: 'tx-inc-' + Date.now(),
+        title: `[INCOME] ${item.title} (${item.sourceOrClient})`,
+        amount: Number(item.amount),
+        type: 'salary',
+        category: 'Salary',
+        date: today,
+        month,
+        notes: `Marked as received • ${item.sourceOrClient} • ${item.category}`
+      };
+      setTransactions(prev => [newTx, ...prev]);
+    }
+    triggerConfetti();
+  };
+
+  const quickCreditSalary = (monthStr?: string) => {
+    const today = getLiveDateString();
+    const targetMonth = monthStr || today.substring(0, 7);
+    
+    setIncomeStreams(prev => {
+      const existing = prev.find(i => i.category === 'salary');
+      if (existing) {
+        return prev.map(i => i.id === existing.id ? { ...i, status: 'received', dateReceived: today } : i);
+      }
+      return [
+        {
+          id: 'inc-salary-' + Date.now(),
+          title: 'Primary Tech Job Fixed Salary',
+          category: 'salary',
+          sourceOrClient: 'Full-Time Employer',
+          amount: salary,
+          frequency: 'monthly',
+          status: 'received',
+          dateReceived: today,
+          colorTag: 'emerald',
+          notes: `Monthly salary credit for ${targetMonth}`
+        },
+        ...prev
+      ];
+    });
+
+    const newTx: Transaction = {
+      id: 'tx-sal-' + Date.now(),
+      title: `Monthly Salary Credit — ${targetMonth}`,
+      amount: salary,
+      type: 'salary',
+      category: 'Salary',
+      date: today,
+      month: targetMonth,
+      notes: `Official ₹${salary.toLocaleString('en-IN')} monthly salary influx`
+    };
+    setTransactions(prev => [newTx, ...prev]);
+    triggerConfetti();
+  };
+
+  // Calculated Income Metrics
+  const totalReceivedIncome = incomeStreams
+    .filter(i => i.status === 'received')
+    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+  const totalPendingReceivables = incomeStreams
+    .filter(i => i.status === 'invoiced' || i.status === 'in_progress' || i.status === 'scheduled')
+    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+  const totalFreelanceEarnings = incomeStreams
+    .filter(i => i.category === 'freelancing')
+    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+  const totalPartTimeEarnings = incomeStreams
+    .filter(i => i.category === 'part_time')
+    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+  // Monthly Basic Needs Operations
+  const addBasicNeed = (need: Omit<BasicNeedRequirement, 'id'>) => {
+    const newNeed: BasicNeedRequirement = {
+      ...need,
+      id: 'need-' + Date.now()
+    };
+    setBasicNeeds(prev => [...prev, newNeed]);
+  };
+
+  const updateBasicNeed = (id: string, updates: Partial<BasicNeedRequirement>) => {
+    setBasicNeeds(prev => prev.map(n => n.id === id ? { ...n, ...updates } : n));
+  };
+
+  const deleteBasicNeed = (id: string) => {
+    setBasicNeeds(prev => prev.filter(n => n.id !== id));
+  };
+
+  const toggleBasicNeedPaid = (id: string) => {
+    setBasicNeeds(prev => prev.map(n => {
+      if (n.id === id) {
+        const nextPaid = !n.isPaid;
+        if (nextPaid) triggerConfetti();
+        return { ...n, isPaid: nextPaid };
+      }
+      return n;
+    }));
+  };
+
+  const totalBasicNeedsBudget = basicNeeds.reduce((sum, n) => sum + (Number(n.amount) || 0), 0);
+  const totalBasicNeedsPaid = basicNeeds.filter(n => n.isPaid).reduce((sum, n) => sum + (Number(n.amount) || 0), 0);
+
+  // Investment Portfolio Operations (Digi Gold, Gold Chit, Silver Chit, Groww Stocks & MFs)
+  const addInvestment = (asset: Omit<InvestmentAsset, 'id' | 'updatedAt'>) => {
+    const gain = Number(asset.currentValue) - Number(asset.investedAmount);
+    const gainPct = asset.investedAmount > 0 ? (gain / asset.investedAmount) * 100 : 0;
+    const newAsset: InvestmentAsset = {
+      ...asset,
+      id: 'inv-' + Date.now(),
+      unrealizedGain: gain,
+      unrealizedGainPct: Number(gainPct.toFixed(2)),
+      updatedAt: getLiveDateString()
+    };
+    setInvestments(prev => [newAsset, ...prev]);
+    triggerConfetti();
+  };
+
+  const updateInvestment = (id: string, updates: Partial<InvestmentAsset>) => {
+    setInvestments(prev => prev.map(inv => {
+      if (inv.id === id) {
+        const updated = { ...inv, ...updates, updatedAt: getLiveDateString() };
+        if (updates.investedAmount !== undefined || updates.currentValue !== undefined) {
+          const invested = Number(updated.investedAmount) || 0;
+          const current = Number(updated.currentValue) || 0;
+          updated.unrealizedGain = current - invested;
+          updated.unrealizedGainPct = invested > 0 ? Number(((updated.unrealizedGain / invested) * 100).toFixed(2)) : 0;
+        }
+        return updated;
+      }
+      return inv;
+    }));
+  };
+
+  const deleteInvestment = (id: string) => {
+    setInvestments(prev => prev.filter(i => i.id !== id));
+  };
+
+  const payChitInstallment = (id: string) => {
+    setInvestments(prev => prev.map(inv => {
+      if (inv.id === id && (inv.category === 'gold_chit' || inv.category === 'silver_chit' || inv.chitMonthlyAmount)) {
+        const monthly = Number(inv.chitMonthlyAmount || inv.monthlySipAmount || 0);
+        const newPaidCount = (inv.chitMonthsPaid || 0) + 1;
+        const newInvested = inv.investedAmount + monthly;
+        const addedGrams = inv.category === 'gold_chit' ? (monthly / 7350) : (monthly / 95);
+        const newQuantity = (inv.quantity || 0) + addedGrams;
+        const newCurrentVal = inv.currentValue + monthly;
+        
+        triggerConfetti();
+        return {
+          ...inv,
+          chitMonthsPaid: newPaidCount,
+          investedAmount: newInvested,
+          currentValue: newCurrentVal,
+          quantity: Number(newQuantity.toFixed(3)),
+          status: newPaidCount >= (inv.chitTenureMonths || 11) ? 'matured' : 'active',
+          updatedAt: getLiveDateString()
+        };
+      }
+      return inv;
+    }));
+  };
+
+  const addBullionTransaction = (
+    assetId: string,
+    txData: Omit<BullionTransaction, 'id'>
+  ) => {
+    setInvestments(prev =>
+      prev.map(asset => {
+        if (asset.id !== assetId) return asset;
+
+        const newTx: BullionTransaction = {
+          ...txData,
+          id: `tx-bullion-${Date.now()}`
+        };
+
+        const existingTxs = asset.transactions || [];
+        const updatedTxs = [newTx, ...existingTxs];
+
+        const newTotalInvested = asset.investedAmount + newTx.amount;
+        const addedTotalWeight = newTx.weightGrams + (newTx.bonusWeightGrams || 0);
+        const newTotalWeight = Number(((asset.quantity || 0) + addedTotalWeight).toFixed(5));
+
+        const baseWeight = (asset.schemeDetails?.baseWeightGrams || 0) + newTx.weightGrams;
+        const bonusWeight = (asset.schemeDetails?.bonusWeightGrams || 0) + (newTx.bonusWeightGrams || 0);
+
+        const currentPrice = asset.currentPrice || (asset.category === 'digi_gold' ? 7380 : 97.5);
+        const newCurrentVal = Math.round(newTotalWeight * currentPrice);
+        const gain = newCurrentVal - newTotalInvested;
+        const gainPct = newTotalInvested > 0 ? (gain / newTotalInvested) * 100 : 0;
+
+        return {
+          ...asset,
+          investedAmount: newTotalInvested,
+          quantity: newTotalWeight,
+          currentValue: newCurrentVal,
+          unrealizedGain: gain,
+          unrealizedGainPct: Number(gainPct.toFixed(2)),
+          updatedAt: getLiveDateString(),
+          schemeDetails: asset.schemeDetails
+            ? {
+                ...asset.schemeDetails,
+                baseWeightGrams: Number(baseWeight.toFixed(5)),
+                bonusWeightGrams: Number(bonusWeight.toFixed(5)),
+                totalWeightGrams: newTotalWeight
+              }
+            : undefined,
+          transactions: updatedTxs
+        };
+      })
+    );
+    triggerConfetti();
+  };
+
+  const deleteBullionTransaction = (assetId: string, txId: string) => {
+    setInvestments(prev =>
+      prev.map(asset => {
+        if (asset.id !== assetId) return asset;
+        const targetTx = asset.transactions?.find(t => t.id === txId);
+        if (!targetTx) return asset;
+
+        const updatedTxs = (asset.transactions || []).filter(t => t.id !== txId);
+        const newInvested = Math.max(0, asset.investedAmount - targetTx.amount);
+        const subWeight = targetTx.weightGrams + (targetTx.bonusWeightGrams || 0);
+        const newWeight = Math.max(0, Number(((asset.quantity || 0) - subWeight).toFixed(5)));
+
+        const baseWeight = Math.max(0, (asset.schemeDetails?.baseWeightGrams || 0) - targetTx.weightGrams);
+        const bonusWeight = Math.max(0, (asset.schemeDetails?.bonusWeightGrams || 0) - (targetTx.bonusWeightGrams || 0));
+
+        const currentPrice = asset.currentPrice || (asset.category === 'digi_gold' ? 7380 : 97.5);
+        const newCurrentVal = Math.round(newWeight * currentPrice);
+        const gain = newCurrentVal - newInvested;
+        const gainPct = newInvested > 0 ? (gain / newInvested) * 100 : 0;
+
+        return {
+          ...asset,
+          investedAmount: newInvested,
+          quantity: newWeight,
+          currentValue: newCurrentVal,
+          unrealizedGain: gain,
+          unrealizedGainPct: Number(gainPct.toFixed(2)),
+          updatedAt: getLiveDateString(),
+          schemeDetails: asset.schemeDetails
+            ? {
+                ...asset.schemeDetails,
+                baseWeightGrams: Number(baseWeight.toFixed(5)),
+                bonusWeightGrams: Number(bonusWeight.toFixed(5)),
+                totalWeightGrams: newWeight
+              }
+            : undefined,
+          transactions: updatedTxs
+        };
+      })
+    );
+  };
+
+  const recordDailyChitPayment = (
+    assetId: string,
+    amount: number,
+    date?: string,
+    notes?: string,
+    customRate?: number,
+    docNo?: string
+  ) => {
+    const isSilver = assetId.includes('silver') || (customRate !== undefined && customRate < 500);
+    const txDateStr = date || getLiveDateString();
+    const defaultRate = isSilver ? 97.5 : 7380;
+    const rate = customRate || defaultRate;
+    const startDate = new Date('2026-10-15');
+    const paymentDate = new Date(txDateStr);
+    const dayDiff = Math.max(1, Math.floor((paymentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+    // 4-Tier Instant Bonus Weight: Days 0-75 (+7%), 76-150 (+5%), 151-225 (+3%), 226-300 (+1%)
+    let bonusPct = 7;
+    if (dayDiff > 225) bonusPct = 1;
+    else if (dayDiff > 150) bonusPct = 3;
+    else if (dayDiff > 75) bonusPct = 5;
+
+    const baseWeight = Number((amount / rate).toFixed(5));
+    const bonusWeight = Number((baseWeight * (bonusPct / 100)).toFixed(5));
+    const metalLabel = isSilver ? '999 Pure Silver' : '22K Gold';
+    const voucherDoc = docNo || `APP27SCTM/${isSilver ? 'SILVER' : 'GOLD'}-DAY-${dayDiff}`;
+
+    // 1. Add bullion transaction to target asset
+    addBullionTransaction(assetId, {
+      date: txDateStr,
+      amount,
+      rate,
+      weightGrams: baseWeight,
+      bonusWeightGrams: bonusWeight,
+      bonusPercentage: bonusPct,
+      docNo: voucherDoc,
+      notes: notes || `Day #${dayDiff} Daily Pay Chit (₹${amount} deposited • +${bonusPct}% Instant Bonus)`
+    });
+
+    // 2. Financially link: Record in transactions cash ledger
+    addTransaction({
+      title: `Daily Pay Chit: ₹${amount} (Pothys ${metalLabel} Saving Plan)`,
+      amount,
+      type: 'expense',
+      category: 'Personal & Leisure',
+      date: txDateStr,
+      notes: `[DAILY_CHIT] Pothys Swarna Mahal ${metalLabel} Saving Plan • Day #${dayDiff} (₹100 Target Met)`
+    });
+
+    triggerConfetti();
+  };
+
+  const recordDualChitPayment = (
+    goldAmount: number = 100,
+    silverAmount: number = 100,
+    date?: string,
+    notes?: string,
+    goldRate?: number,
+    silverRate?: number
+  ) => {
+    const txDateStr = date || getLiveDateString();
+    recordDailyChitPayment('pothys-digi-gold', goldAmount, txDateStr, notes ? `[Dual Pay Gold] ${notes}` : undefined, goldRate || 7380);
+    recordDailyChitPayment('pothys-digi-silver', silverAmount, txDateStr, notes ? `[Dual Pay Silver] ${notes}` : undefined, silverRate || 97.5);
+  };
+
+  const batchPayChitDays = (
+    payments: { assetId: string; amount: number; date: string; customRate?: number; notes?: string }[]
+  ) => {
+    payments.forEach(p => {
+      recordDailyChitPayment(p.assetId, p.amount, p.date, p.notes, p.customRate);
+    });
+    triggerConfetti();
+  };
+
+  const updateStockPrice = (assetId: string, newPrice: number) => {
+    setInvestments(prev =>
+      prev.map(asset => {
+        if (asset.id !== assetId) return asset;
+        const qty = asset.quantity || 1;
+        const newCurrentVal = Number((newPrice * qty).toFixed(2));
+        const gain = Number((newCurrentVal - asset.investedAmount).toFixed(2));
+        const gainPct = asset.investedAmount > 0 ? Number(((gain / asset.investedAmount) * 100).toFixed(2)) : 0;
+
+        const prevClose = asset.previousClosePrice || asset.buyPriceAverage || newPrice;
+        const oneDayDiff = Number(((newPrice - prevClose) * qty).toFixed(2));
+        const oneDayDiffPct = prevClose > 0 ? Number((((newPrice - prevClose) / prevClose) * 100).toFixed(2)) : 0;
+
+        return {
+          ...asset,
+          currentPrice: newPrice,
+          currentValue: newCurrentVal,
+          unrealizedGain: gain,
+          unrealizedGainPct: gainPct,
+          oneDayReturn: oneDayDiff,
+          oneDayReturnPct: oneDayDiffPct,
+          updatedAt: getLiveDateString()
+        };
+      })
+    );
+  };
+
+  const growwAssets = investments.filter(
+    i => i.platform === 'Groww' || i.category === 'groww_stocks' || i.id.startsWith('groww-')
+  );
+  const growwTotalInvested = Number(growwAssets.reduce((sum, i) => sum + (Number(i.investedAmount) || 0), 0).toFixed(2));
+  const growwTotalCurrent = Number(growwAssets.reduce((sum, i) => sum + (Number(i.currentValue) || 0), 0).toFixed(2));
+  const growwTotalReturns = Number((growwTotalCurrent - growwTotalInvested).toFixed(2));
+  const growwTotalReturnsPct = growwTotalInvested > 0 ? Number(((growwTotalReturns / growwTotalInvested) * 100).toFixed(2)) : 0;
+  const growwOneDayReturns = Number(growwAssets.reduce((sum, i) => sum + (Number(i.oneDayReturn) || 0), 0).toFixed(2));
+  const growwOneDayReturnsPct = growwTotalCurrent > 0 ? Number(((growwOneDayReturns / growwTotalCurrent) * 100).toFixed(2)) : 0;
+
+  const growwSummary = {
+    totalInvested: growwTotalInvested,
+    totalCurrent: growwTotalCurrent,
+    totalReturns: growwTotalReturns,
+    totalReturnsPct: growwTotalReturnsPct,
+    oneDayReturns: growwOneDayReturns,
+    oneDayReturnsPct: growwOneDayReturnsPct
+  };
+
+  const totalInvestedCapital = investments.reduce((sum, i) => sum + (Number(i.investedAmount) || 0), 0);
+  const totalPortfolioValue = investments.reduce((sum, i) => sum + (Number(i.currentValue) || 0), 0);
+  const totalInvestmentReturns = totalPortfolioValue - totalInvestedCapital;
+  const totalInvestmentReturnsPct = totalInvestedCapital > 0 ? (totalInvestmentReturns / totalInvestedCapital) * 100 : 0;
+  const monthlyInvestmentOutflow = investments.reduce((sum, i) => {
+    const chit = Number(i.chitMonthlyAmount) || 0;
+    const sip = Number(i.monthlySipAmount) || 0;
+    return sum + (chit > 0 ? chit : sip);
+  }, 0);
 
   // Skills
   const updateSkill = (id: string, updates: Partial<SkillModule>) => {
@@ -1160,6 +1872,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       loanAccounts,
       loanPayments,
       transactions,
+      basicNeeds,
+      investments,
       skills,
       careerOverview,
       tasks,
@@ -1185,6 +1899,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const data = JSON.parse(jsonStr);
       if (data.loanAccounts) setLoanAccounts(data.loanAccounts);
       if (data.transactions) setTransactions(data.transactions);
+      if (data.basicNeeds) setBasicNeeds(data.basicNeeds);
+      if (data.investments) setInvestments(data.investments);
       if (data.loanPayments) setLoanPayments(data.loanPayments);
       if (data.skills) setSkills(data.skills);
       if (data.careerOverview) setCareerOverview(data.careerOverview);
@@ -1209,6 +1925,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoanAccounts(initialLoanAccounts);
       setLoanPayments([]);
       setTransactions([]);
+      setBasicNeeds(initialBasicNeeds);
+      setInvestments(initialInvestments);
       setSkills(initialSkills);
       setCareerOverview(initialCareerOverview);
       setTasks([]);
@@ -1228,8 +1946,26 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       value={{
         activeTab,
         setActiveTab,
+        activeSubTab,
+        setActiveSubTab,
+        navigateToTab,
+        isQuickAddOpen,
+        setIsQuickAddOpen,
+        quickAddDefaultType,
+        setQuickAddDefaultType,
+        openQuickAdd,
         salary,
         setSalary,
+        incomeStreams,
+        addIncomeStream,
+        updateIncomeStream,
+        deleteIncomeStream,
+        markIncomeReceived,
+        quickCreditSalary,
+        totalReceivedIncome,
+        totalPendingReceivables,
+        totalFreelanceEarnings,
+        totalPartTimeEarnings,
         loanAccounts,
         addLoanAccount,
         updateLoanAccount,
@@ -1242,10 +1978,39 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         firstLakhProgress,
         loanPayments,
         addLoanPayment,
+        updateLoanPayment,
         deleteLoanPayment,
         transactions,
         addTransaction,
+        updateTransaction,
         deleteTransaction,
+        // Monthly Basic Needs
+        basicNeeds,
+        addBasicNeed,
+        updateBasicNeed,
+        deleteBasicNeed,
+        toggleBasicNeedPaid,
+        totalBasicNeedsBudget,
+        totalBasicNeedsPaid,
+        // Investment Portfolio
+        investments,
+        addInvestment,
+        updateInvestment,
+        deleteInvestment,
+        payChitInstallment,
+        addBullionTransaction,
+        deleteBullionTransaction,
+        recordDailyChitPayment,
+        recordDualChitPayment,
+        batchPayChitDays,
+        updateStockPrice,
+        growwSummary,
+        totalInvestedCapital,
+        totalPortfolioValue,
+        totalInvestmentReturns,
+        totalInvestmentReturnsPct,
+        monthlyInvestmentOutflow,
+        // Career
         skills,
         careerOverview,
         updateSkill,

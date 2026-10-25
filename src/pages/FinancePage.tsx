@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IndianRupee,
   AlertCircle,
@@ -7,6 +7,7 @@ import {
   Calculator,
   Calendar,
   Trash2,
+  Edit3,
   PieChart as PieIcon,
   Search,
   Flame,
@@ -15,7 +16,9 @@ import {
   Layers,
   ArrowRight,
   TrendingDown,
-  Sparkles
+  Sparkles,
+  WalletCards,
+  ChevronRight
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -30,7 +33,7 @@ import {
 } from 'recharts';
 import { useLifeOS } from '../context/LifeOSContext';
 import { QuickAddModal } from '../components/QuickAddModal';
-import { ExpenseCategory } from '../types';
+import { ExpenseCategory, Transaction, TransactionType } from '../types';
 import {
   getLiveDateString,
   getLiveMonthString,
@@ -52,13 +55,23 @@ export const FinancePage: React.FC = () => {
     deleteLoanPayment,
     transactions,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
-    firstLakhProgress
+    firstLakhProgress,
+    navigateToTab,
+    setActiveTab: setNavTab,
+    activeSubTab: contextActiveSubTab
   } = useLifeOS();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'expense' | 'loan'>('expense');
   const [activeTab, setActiveTab] = useState<'overview' | 'loans' | 'daily_tracker' | 'simulator' | 'transactions'>('overview');
+
+  useEffect(() => {
+    if (contextActiveSubTab && ['overview', 'loans', 'daily_tracker', 'simulator', 'transactions'].includes(contextActiveSubTab)) {
+      setActiveTab(contextActiveSubTab as any);
+    }
+  }, [contextActiveSubTab]);
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedLoanFilter, setSelectedLoanFilter] = useState<string>('all');
 
@@ -74,6 +87,42 @@ export const FinancePage: React.FC = () => {
   const [quickCategory, setQuickCategory] = useState<ExpenseCategory>('Food & Groceries');
   const [quickIsWant, setQuickIsWant] = useState(false);
   const [quickNotes, setQuickNotes] = useState('');
+
+  // Edit Transaction state
+  const [editTxModalOpen, setEditTxModalOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [editTxTitle, setEditTxTitle] = useState('');
+  const [editTxAmount, setEditTxAmount] = useState<number>(0);
+  const [editTxType, setEditTxType] = useState<TransactionType>('expense');
+  const [editTxCategory, setEditTxCategory] = useState<ExpenseCategory>('Food & Groceries');
+  const [editTxDate, setEditTxDate] = useState(getLiveDateString());
+  const [editTxNotes, setEditTxNotes] = useState('');
+
+  const openEditTxModal = (tx: Transaction) => {
+    setEditingTx(tx);
+    setEditTxTitle(tx.title);
+    setEditTxAmount(tx.amount);
+    setEditTxType(tx.type);
+    setEditTxCategory(tx.category);
+    setEditTxDate(tx.date);
+    setEditTxNotes(tx.notes || '');
+    setEditTxModalOpen(true);
+  };
+
+  const handleSaveTxEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTx) return;
+    updateTransaction(editingTx.id, {
+      title: editTxTitle.trim(),
+      amount: Number(editTxAmount),
+      type: editTxType,
+      category: editTxCategory,
+      date: editTxDate,
+      notes: editTxNotes.trim() || undefined
+    });
+    setEditTxModalOpen(false);
+    setEditingTx(null);
+  };
 
   // Simulator state: Monthly Principal payment slider
   const [simMonthlyPayment, setSimMonthlyPayment] = useState<number>(16000);
@@ -233,6 +282,35 @@ export const FinancePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Dedicated Income & Multi-Stream Earnings Banner */}
+      <div
+        onClick={() => navigateToTab('income')}
+        className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/5 border border-emerald-500/40 hover:border-emerald-400/80 shadow-lg cursor-pointer transition group flex items-center justify-between gap-4"
+      >
+        <div className="flex items-center space-x-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
+            <WalletCards className="w-5 h-5 text-slate-950" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
+                Income & Earnings Monitor
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-500/40">
+                Salary • Freelancing • Part-Time Gigs
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Track your ₹34,000 guaranteed salary alongside freelance client milestones and hourly gig shifts in dedicated command channels.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 group-hover:text-emerald-300 shrink-0">
+          <span>Open Income Monitor</span>
+          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+
       {/* TOP KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Safe Daily Spend Target */}
@@ -369,9 +447,18 @@ export const FinancePage: React.FC = () => {
                   Track and repay each of your 3 distinct loans individually with separate principal and EMI deductions.
                 </p>
               </div>
-              <div className="text-xs text-right">
-                <span className="text-slate-400 block">Total Original Debt:</span>
-                <span className="text-base font-bold text-white">₹{totalOriginalPrincipal.toLocaleString('en-IN')}</span>
+              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                <button
+                  onClick={() => setNavTab('loans')}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-rose-950/40 flex items-center space-x-1.5 transition-all hover:scale-105"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Open Dedicated Loans Dashboard →</span>
+                </button>
+                <div className="text-xs text-right hidden lg:block">
+                  <span className="text-slate-400 block">Total Original Debt:</span>
+                  <span className="text-base font-bold text-white">₹{totalOriginalPrincipal.toLocaleString('en-IN')}</span>
+                </div>
               </div>
             </div>
 
@@ -837,12 +924,26 @@ export const FinancePage: React.FC = () => {
                               {t.type === 'salary' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <button
-                                onClick={() => deleteTransaction(t.id)}
-                                className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="flex items-center justify-end space-x-1.5">
+                                <button
+                                  onClick={() => openEditTxModal(t)}
+                                  className="p-1 rounded text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition-colors"
+                                  title="Edit transaction"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm(`Delete transaction "${t.title}" (₹${t.amount.toLocaleString('en-IN')})?`)) {
+                                      deleteTransaction(t.id);
+                                    }
+                                  }}
+                                  className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                                  title="Delete transaction"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1120,12 +1221,26 @@ export const FinancePage: React.FC = () => {
                           {t.type === 'salary' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => deleteTransaction(t.id)}
-                            className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center justify-end space-x-1.5">
+                            <button
+                              onClick={() => openEditTxModal(t)}
+                              className="p-1 rounded text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition-colors"
+                              title="Edit transaction"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Delete transaction "${t.title}" (₹${t.amount.toLocaleString('en-IN')})?`)) {
+                                  deleteTransaction(t.id);
+                                }
+                              }}
+                              className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              title="Delete transaction"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1133,6 +1248,124 @@ export const FinancePage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT TRANSACTION MODAL */}
+      {editTxModalOpen && editingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-indigo-500/40 w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <Edit3 className="w-4 h-4 text-indigo-400" />
+                <span>Edit Transaction</span>
+              </h3>
+              <button
+                onClick={() => setEditTxModalOpen(false)}
+                className="text-slate-400 hover:text-white text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTxEdit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Title / Description *:</label>
+                <input
+                  type="text"
+                  value={editTxTitle}
+                  onChange={(e) => setEditTxTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1 font-semibold">Amount (₹) *:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editTxAmount}
+                    onChange={(e) => setEditTxAmount(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1 font-semibold">Date *:</label>
+                  <input
+                    type="date"
+                    value={editTxDate}
+                    onChange={(e) => setEditTxDate(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1 font-semibold">Type:</label>
+                  <select
+                    value={editTxType}
+                    onChange={(e) => setEditTxType(e.target.value as TransactionType)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="salary">Salary / Income</option>
+                    <option value="loan_payment">Loan Payment</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1 font-semibold">Category:</label>
+                  <select
+                    value={editTxCategory}
+                    onChange={(e) => setEditTxCategory(e.target.value as ExpenseCategory)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Food & Groceries">Food & Groceries</option>
+                    <option value="Rent & Utilities">Rent & Utilities</option>
+                    <option value="Learning & Courses">Learning & Courses</option>
+                    <option value="Transit & Fuel">Transit & Fuel</option>
+                    <option value="Health & Wellness">Health & Wellness</option>
+                    <option value="Personal & Leisure">Personal & Leisure</option>
+                    <option value="Family & Commitments">Family & Commitments</option>
+                    <option value="Loan Principal">Loan Principal</option>
+                    <option value="Loan Interest">Loan Interest</option>
+                    <option value="Salary">Salary</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Notes:</label>
+                <textarea
+                  rows={2}
+                  value={editTxNotes}
+                  onChange={(e) => setEditTxNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditTxModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
