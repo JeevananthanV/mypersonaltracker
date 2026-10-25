@@ -40,6 +40,7 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { NavTab } from '../types';
 import { checkBackendHealth, HealthResponse } from '../services/api';
+import { DatabaseConnectionModal } from './common/DatabaseConnectionModal';
 import { getLiveDateString } from '../utils/date-utils';
 
 interface SidebarProps {
@@ -92,6 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
+  const [isDbModalOpen, setIsDbModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Track expanded trackers (collapsible state)
@@ -640,8 +642,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
         {/* MongoDB Cloud Sync Pill */}
         <div className="pt-2 pb-1 px-3 border-t border-slate-800/80 bg-[#080C16]">
           <button
-            onClick={refreshHealth}
-            title={backendHealth?.database.connected ? 'MongoDB Atlas Online' : 'Local Storage Mode'}
+            onClick={() => setIsDbModalOpen(true)}
+            title={backendHealth?.database.connected ? 'MongoDB Atlas Online — Click to inspect connection' : 'Local Storage Mode — Click to configure cloud backend'}
             className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs bg-slate-900/90 border border-slate-800 text-slate-300 hover:border-slate-700 transition-colors"
           >
             <div className="flex items-center space-x-2">
@@ -709,6 +711,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
           </div>
         </div>
       </aside>
+
+      <DatabaseConnectionModal
+        isOpen={isDbModalOpen}
+        onClose={() => setIsDbModalOpen(false)}
+        onRefreshHealth={refreshHealth}
+      />
     </>
   );
 };

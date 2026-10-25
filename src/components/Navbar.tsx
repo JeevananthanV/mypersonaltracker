@@ -20,6 +20,7 @@ import {
 import { useLifeOS } from '../context/LifeOSContext';
 import { NavTab } from '../types';
 import { checkBackendHealth, HealthResponse } from '../services/api';
+import { DatabaseConnectionModal } from './common/DatabaseConnectionModal';
 import { getLiveDateString } from '../utils/date-utils';
 
 export const Navbar: React.FC = () => {
@@ -37,6 +38,7 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
+  const [isDbModalOpen, setIsDbModalOpen] = useState(false);
 
   const pendingTasksToday = tasks.filter(t => t.status !== 'completed' && t.dueDate === getLiveDateString()).length;
 
@@ -138,8 +140,8 @@ export const Navbar: React.FC = () => {
           <div className="hidden sm:flex items-center space-x-2">
             {/* MongoDB Backend Status Pill */}
             <button
-              onClick={refreshHealth}
-              title={`Backend: ${backendHealth ? 'Port 5000 Online' : 'Offline'}. Click to refresh status.`}
+              onClick={() => setIsDbModalOpen(true)}
+              title={`Database Status: ${backendHealth?.database.connected ? 'MongoDB Atlas Connected' : 'Local Storage Mode'}. Click for connection details.`}
               className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
                 backendHealth?.database.connected
                   ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
@@ -212,10 +214,13 @@ export const Navbar: React.FC = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-800 bg-slate-950/95 px-4 pt-3 pb-6 space-y-1 backdrop-blur-2xl">
-          <div className="pb-3 mb-2 border-b border-slate-800 flex justify-between items-center text-xs">
+          <div 
+            onClick={() => setIsDbModalOpen(true)}
+            className="pb-3 mb-2 border-b border-slate-800 flex justify-between items-center text-xs cursor-pointer hover:bg-slate-900/50 p-1.5 rounded-lg transition-colors"
+          >
             <span className="text-slate-400">Database & Backend:</span>
-            <span className="font-bold text-emerald-400">
-              {backendHealth?.database.connected ? 'MongoDB Connected' : 'Local Storage Mode'}
+            <span className={`font-bold ${backendHealth?.database.connected ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {backendHealth?.database.connected ? 'MongoDB Connected' : 'Local Storage Mode (Tap)'}
             </span>
           </div>
           {navItems.map((item) => {
@@ -255,6 +260,12 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      <DatabaseConnectionModal
+        isOpen={isDbModalOpen}
+        onClose={() => setIsDbModalOpen(false)}
+        onRefreshHealth={refreshHealth}
+      />
     </header>
   );
 };
