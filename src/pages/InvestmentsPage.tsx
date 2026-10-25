@@ -2020,6 +2020,7 @@ export const InvestmentsPage: React.FC = () => {
           onOpenQuickDeposit={(dayNum, dateStr, metal) => {
             handleOpenDepositModal(metal === 'silver' ? 'pothys-digi-silver' : 'pothys-digi-gold');
           }}
+          onBackToOverview={() => setActiveDashboardTab('overview')}
         />
       )}
 

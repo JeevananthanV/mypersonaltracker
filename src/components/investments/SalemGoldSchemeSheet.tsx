@@ -25,7 +25,8 @@ import {
   Building,
   Check,
   Percent,
-  Plus
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
 import { InvestmentAsset, BullionTransaction } from '../../types';
 import { Card3D } from '../ui/Card3D';
@@ -49,6 +50,7 @@ interface SalemGoldSchemeSheetProps {
   onRecordDailyPay: (assetId: string, amount: number, date?: string, notes?: string, customRate?: number, docNo?: string) => void;
   onRecordDualPay?: (goldAmount: number, silverAmount: number, date?: string, notes?: string, goldRate?: number, silverRate?: number) => void;
   onOpenQuickDeposit?: (dayNum: number, dateString: string, metal: 'gold' | 'silver' | 'dual') => void;
+  onBackToOverview?: () => void;
 }
 
 const formatCurrency = (val: number) => `₹${Math.round(val || 0).toLocaleString('en-IN')}`;
@@ -58,7 +60,8 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
   silverAsset,
   onRecordDailyPay,
   onRecordDualPay,
-  onOpenQuickDeposit
+  onOpenQuickDeposit,
+  onBackToOverview
 }) => {
   const todayStr = getLiveDateString(); // "2026-10-25"
   const schemeStartDateStr = '2026-10-15';
@@ -385,6 +388,15 @@ export const SalemGoldSchemeSheet: React.FC<SalemGoldSchemeSheetProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
+              {onBackToOverview && (
+                <button
+                  onClick={onBackToOverview}
+                  className="px-3 py-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Investments</span>
+                </button>
+              )}
               <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 flex items-center gap-1.5 shadow-md">
                 <Building className="w-3.5 h-3.5" />
                 Pothys Swarna Mahal — Salem Showroom Portal
