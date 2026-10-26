@@ -114,6 +114,18 @@ interface LifeOSContextType {
   updateInvestment: (id: string, updates: Partial<InvestmentAsset>) => void;
   deleteInvestment: (id: string) => void;
   payChitInstallment: (id: string) => void;
+  logChitInstallmentPayment: (
+    assetId: string,
+    details: {
+      amount?: number;
+      date?: string;
+      paymentMode?: string;
+      docNo?: string;
+      notes?: string;
+      gramsCredited?: number;
+    }
+  ) => void;
+  deleteChitVoucher: (assetId: string, voucherId: string) => void;
   addBullionTransaction: (assetId: string, tx: Omit<BullionTransaction, 'id'>) => void;
   deleteBullionTransaction: (assetId: string, txId: string) => void;
   recordDailyChitPayment: (
@@ -260,16 +272,14 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Guarantee no dummy mock investments
+        // Guarantee no dummy mock investments (keep authentic chits, jeweller schemes, stocks, and daily schemes)
         if (parsed.investments && Array.isArray(parsed.investments)) {
           parsed.investments = parsed.investments.filter((i: any) =>
             !['inv-1', 'inv-2', 'inv-3', 'inv-4', 'inv-5', 'inv-6'].includes(i.id) &&
             !i.name?.includes('MMTC-PAMP') &&
             !i.name?.includes('Tata Motors') &&
             !i.name?.includes('Parag Parikh') &&
-            !i.name?.includes('Nippon India') &&
-            !i.name?.includes('GRT 11-Month') &&
-            !i.name?.includes('Lalitha 11-Month')
+            !i.name?.includes('Nippon India')
           );
         }
         // Guarantee no dummy mock basic needs
@@ -1452,22 +1462,114 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const monthly = Number(inv.chitMonthlyAmount || inv.monthlySipAmount || 0);
         const newPaidCount = (inv.chitMonthsPaid || 0) + 1;
         const newInvested = inv.investedAmount + monthly;
-        const addedGrams = inv.category === 'gold_chit' ? (monthly / 7350) : (monthly / 95);
-        const newQuantity = (inv.quantity || 0) + addedGrams;
+        const rate = inv.category === 'gold_chit' ? 7380 : inv.category === 'silver_chit' ? 97.5 : 0;
+        const addedGrams = inv.category === 'gold_chit' ? (monthly / 7380) : inv.category === 'silver_chit' ? (monthly / 97.5) : 0;
+        const newQuantity = Number(((inv.quantity || 0) + addedGrams).toFixed(3));
         const newCurrentVal = inv.currentValue + monthly;
         
+        const voucherTx: BullionTransaction = {
+          id: `tx-chit-${Date.now()}`,
+          date: getLiveDateString(),
+          amount: monthly,
+          rate: rate,
+          weightGrams: Number(addedGrams.toFixed(4)),
+          bonusWeightGrams: 0,
+          bonusPercentage: 0,
+          docNo: `CHIT-PAY-M${newPaidCount}`,
+          notes: `Month #${newPaidCount} Installment payment recorded`
+        };
+
         triggerConfetti();
         return {
           ...inv,
           chitMonthsPaid: newPaidCount,
           investedAmount: newInvested,
           currentValue: newCurrentVal,
-          quantity: Number(newQuantity.toFixed(3)),
+          quantity: newQuantity,
           status: newPaidCount >= (inv.chitTenureMonths || 11) ? 'matured' : 'active',
+          transactions: [voucherTx, ...(inv.transactions || [])],
           updatedAt: getLiveDateString()
         };
       }
       return inv;
+    }));
+  };
+
+  const logChitInstallmentPayment = (
+    assetId: string,
+    details: {
+      amount?: number;
+      date?: string;
+      paymentMode?: string;
+      docNo?: string;
+      notes?: string;
+      gramsCredited?: number;
+    }
+  ) => {
+    setInvestments(prev => prev.map(inv => {
+      if (inv.id !== assetId) return inv;
+      const amountPaid = details.amount !== undefined ? Number(details.amount) : Number(inv.chitMonthlyAmount || 2000);
+      const newPaidCount = (inv.chitMonthsPaid || 0) + 1;
+      const newInvested = inv.investedAmount + amountPaid;
+      const rate = inv.category === 'gold_chit' ? 7380 : inv.category === 'silver_chit' ? 97.5 : 0;
+      const addedGrams = details.gramsCredited !== undefined 
+        ? Number(details.gramsCredited) 
+        : inv.category === 'gold_chit' 
+          ? Number((amountPaid / 7380).toFixed(4)) 
+          : inv.category === 'silver_chit' 
+            ? Number((amountPaid / 97.5).toFixed(4)) 
+            : 0;
+      const newQuantity = Number(((inv.quantity || 0) + addedGrams).toFixed(3));
+      const newCurrentVal = inv.currentValue + amountPaid;
+
+      const voucherTx: BullionTransaction = {
+        id: `tx-chit-${Date.now()}`,
+        date: details.date || getLiveDateString(),
+        amount: amountPaid,
+        rate: rate,
+        weightGrams: addedGrams,
+        bonusWeightGrams: 0,
+        bonusPercentage: 0,
+        docNo: details.docNo || `${inv.platform.slice(0, 3).toUpperCase()}-M${newPaidCount}`,
+        notes: details.notes || `Month #${newPaidCount} installment (${details.paymentMode || 'UPI'})`
+      };
+
+      triggerConfetti();
+      return {
+        ...inv,
+        chitMonthsPaid: newPaidCount,
+        investedAmount: newInvested,
+        currentValue: newCurrentVal,
+        quantity: newQuantity,
+        status: newPaidCount >= (inv.chitTenureMonths || 11) ? 'matured' : 'active',
+        transactions: [voucherTx, ...(inv.transactions || [])],
+        updatedAt: getLiveDateString()
+      };
+    }));
+  };
+
+  const deleteChitVoucher = (assetId: string, voucherId: string) => {
+    setInvestments(prev => prev.map(inv => {
+      if (inv.id !== assetId) return inv;
+      const targetTx = inv.transactions?.find(t => t.id === voucherId);
+      if (!targetTx) return inv;
+
+      const updatedTxs = (inv.transactions || []).filter(t => t.id !== voucherId);
+      const newPaid = Math.max(0, (inv.chitMonthsPaid || 1) - 1);
+      const newInvested = Math.max(0, inv.investedAmount - targetTx.amount);
+      const newQuantity = Math.max(0, Number(((inv.quantity || 0) - targetTx.weightGrams).toFixed(3)));
+      const newCurrentVal = Math.max(0, inv.currentValue - targetTx.amount);
+
+      return {
+        ...inv,
+        chitMonthsPaid: newPaid,
+        investedAmount: newInvested,
+        currentValue: newCurrentVal,
+        quantity: newQuantity,
+        status: newPaid >= (inv.chitTenureMonths || 11) ? 'matured' : 'active',
+        transactions: updatedTxs,
+        updatedAt: getLiveDateString()
+      };
     }));
   };
 
@@ -1998,6 +2100,8 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateInvestment,
         deleteInvestment,
         payChitInstallment,
+        logChitInstallmentPayment,
+        deleteChitVoucher,
         addBullionTransaction,
         deleteBullionTransaction,
         recordDailyChitPayment,
