@@ -169,6 +169,7 @@ export type InvestmentCategory =
   | 'digi_gold'       // Digital Gold (MMTC-PAMP, Jar, Safegold)
   | 'gold_chit'       // Gold Chit / Monthly 11-Month Jeweller Scheme (Tanishq, Malabar, GRT)
   | 'silver_chit'     // Silver Chit / Physical Silver Accumulation
+  | 'offline_chit'    // Offline Monthly Chit / Local Committee Chit (e.g. ₹1,000 / month, 14th Oct)
   | 'groww_stocks'    // Groww App Equity Stocks
   | 'mutual_funds'    // Mutual Fund SIPs
   | 'etf'             // Gold ETFs, Nifty BeES
@@ -222,6 +223,7 @@ export interface InvestmentAsset {
   chitTenureMonths?: number; // e.g. 11 months
   chitMonthsPaid?: number; // e.g. 6 of 11 paid
   chitMonthlyAmount?: number; // e.g. ₹3,000 / month
+  dueDayOfMonth?: number; // e.g. 14 for 14th of every month (Offline Chit), 10 for GRT, 5 for Lalitha
   maturityBonus?: number; // e.g. 1 month jeweller bonus discount
   symbolOrCode?: string;
   unrealizedGain?: number;

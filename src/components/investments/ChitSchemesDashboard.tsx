@@ -22,7 +22,12 @@ import {
   Filter,
   Layers,
   TrendingUp,
-  Percent
+  Percent,
+  Bookmark,
+  Bell,
+  Check,
+  Zap,
+  MapPin
 } from 'lucide-react';
 import { InvestmentAsset, InvestmentCategory, BullionTransaction } from '../../types';
 import { useLifeOS } from '../../context/LifeOSContext';
@@ -58,8 +63,10 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
     triggerConfetti
   } = useLifeOS();
 
-  // Filter & Search State
-  const [activeFilter, setActiveFilter] = useState<'all' | 'gold' | 'silver' | 'chit_fund' | 'active' | 'matured'>('all');
+  // Separate Monitoring Filter & Search State
+  const [activeFilter, setActiveFilter] = useState<
+    'all' | 'offline' | 'digi_bullion' | 'jeweller' | 'chit_fund' | 'active' | 'matured'
+  >('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Built-in CRUD Modals State
@@ -70,76 +77,100 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
   const [deletingChit, setDeletingChit] = useState<InvestmentAsset | null>(null);
 
   // Enroll / Edit Form Fields
-  const [formCategory, setFormCategory] = useState<'gold_chit' | 'silver_chit' | 'other'>('gold_chit');
+  const [formCategory, setFormCategory] = useState<'gold_chit' | 'silver_chit' | 'offline_chit' | 'digi_gold' | 'other'>('offline_chit');
   const [formName, setFormName] = useState('');
-  const [formPlatform, setFormPlatform] = useState('GRT Jewellers');
+  const [formPlatform, setFormPlatform] = useState('Offline Local Committee');
   const [formSymbolOrCode, setFormSymbolOrCode] = useState('');
-  const [formMonthlyAmount, setFormMonthlyAmount] = useState<number | string>(2000);
-  const [formTenureMonths, setFormTenureMonths] = useState<number | string>(11);
+  const [formMonthlyAmount, setFormMonthlyAmount] = useState<number | string>(1000);
+  const [formTenureMonths, setFormTenureMonths] = useState<number | string>(12);
   const [formMonthsPaid, setFormMonthsPaid] = useState<number | string>(1);
+  const [formDueDay, setFormDueDay] = useState<number | string>(14);
   const [formAccumulatedGrams, setFormAccumulatedGrams] = useState<number | string>('');
-  const [formMaturityBonus, setFormMaturityBonus] = useState<number | string>(2000);
-  const [formStartDate, setFormStartDate] = useState(getLiveDateString());
+  const [formMaturityBonus, setFormMaturityBonus] = useState<number | string>(1000);
+  const [formStartDate, setFormStartDate] = useState('2026-10-14');
   const [formMaturityDate, setFormMaturityDate] = useState('');
   const [formStatus, setFormStatus] = useState<'active' | 'matured'>('active');
   const [formNotes, setFormNotes] = useState('');
 
   // Payment Recording Form Fields
   const [payDate, setPayDate] = useState(getLiveDateString());
-  const [payAmount, setPayAmount] = useState<number | string>(2000);
-  const [payMethod, setPayMethod] = useState('UPI (Google Pay / PhonePe)');
+  const [payAmount, setPayAmount] = useState<number | string>(1000);
+  const [payMethod, setPayMethod] = useState('Cash (Physical Counterfoil)');
   const [payDocNo, setPayDocNo] = useState('');
   const [payGrams, setPayGrams] = useState<number | string>('');
   const [payNotes, setPayNotes] = useState('');
 
-  // Open Enroll Modal
-  const handleOpenEnrollModal = (presetCategory: 'gold_chit' | 'silver_chit' | 'other' = 'gold_chit') => {
+  // Open Enroll Modal with smart presets
+  const handleOpenEnrollModal = (presetCategory: 'gold_chit' | 'silver_chit' | 'offline_chit' | 'other' = 'offline_chit') => {
     setFormCategory(presetCategory);
-    setFormName(
-      presetCategory === 'gold_chit'
-        ? 'GRT Jewellers — Golden Eleven (11-Month Gold Scheme)'
-        : presetCategory === 'silver_chit'
-        ? 'Lalitha Thanga Maligai — 11-Month Silver Scheme'
-        : 'Sri Saravana Chits — 20-Month Family Chit Fund'
-    );
-    setFormPlatform(
-      presetCategory === 'gold_chit'
-        ? 'GRT Jewellers'
-        : presetCategory === 'silver_chit'
-        ? 'Lalitha Thanga Maligai'
-        : 'Sri Saravana Chits (Salem)'
-    );
-    setFormSymbolOrCode(
-      presetCategory === 'gold_chit' ? 'GRT-GE-90812' : presetCategory === 'silver_chit' ? 'LTM-SLV-44102' : 'SSC-CHIT-1L-20M'
-    );
-    setFormMonthlyAmount(presetCategory === 'other' ? 5000 : presetCategory === 'silver_chit' ? 3000 : 2000);
-    setFormTenureMonths(presetCategory === 'other' ? 20 : 11);
-    setFormMonthsPaid(0);
-    setFormAccumulatedGrams('');
-    setFormMaturityBonus(presetCategory === 'other' ? 3500 : presetCategory === 'silver_chit' ? 3000 : 2000);
-    setFormStartDate(getLiveDateString());
-    setFormMaturityDate('');
+    if (presetCategory === 'offline_chit') {
+      setFormName('Offline Monthly Chit (₹1,000 / 14-Oct)');
+      setFormPlatform('Offline Physical Chit / Local Committee (Salem)');
+      setFormSymbolOrCode('OFFLINE-CHIT-1000');
+      setFormMonthlyAmount(1000);
+      setFormTenureMonths(12);
+      setFormMonthsPaid(1);
+      setFormDueDay(14);
+      setFormAccumulatedGrams('');
+      setFormMaturityBonus(1000);
+      setFormStartDate('2026-10-14');
+      setFormMaturityDate('2027-10-14');
+      setFormNotes('Offline physical savings chit fund started on 14-Oct-2026. Monthly installment ₹1,000 due on 14th of every month. Month #1 paid on 14-Oct-2026.');
+    } else if (presetCategory === 'gold_chit') {
+      setFormName('GRT Jewellers — Golden Eleven (11-Month Gold Scheme)');
+      setFormPlatform('GRT Jewellers');
+      setFormSymbolOrCode('GRT-GE-90812');
+      setFormMonthlyAmount(2000);
+      setFormTenureMonths(11);
+      setFormMonthsPaid(6);
+      setFormDueDay(10);
+      setFormAccumulatedGrams('2.012');
+      setFormMaturityBonus(2000);
+      setFormStartDate('2026-05-10');
+      setFormMaturityDate('2027-04-10');
+      setFormNotes('11 monthly installments of ₹2,000. 12th month paid as bonus (+₹2,000 credit). 0% Wastage / VA charges up to 18%.');
+    } else if (presetCategory === 'silver_chit') {
+      setFormName('Lalitha Thanga Maligai — 11-Month Silver Jewel Scheme');
+      setFormPlatform('Lalitha Thanga Maligai');
+      setFormSymbolOrCode('LTM-SLV-44102');
+      setFormMonthlyAmount(3000);
+      setFormTenureMonths(11);
+      setFormMonthsPaid(4);
+      setFormDueDay(5);
+      setFormAccumulatedGrams('135.38');
+      setFormMaturityBonus(3000);
+      setFormStartDate('2026-07-05');
+      setFormMaturityDate('2027-06-05');
+      setFormNotes('11 monthly installments of ₹3,000. Full 12th month paid as bonus (+₹3,000). 0% Making Charges & 0% Wastage on silver articles.');
+    } else {
+      setFormName('Sri Saravana Chits — 20-Month Family Chit Fund');
+      setFormPlatform('Sri Saravana Chits (Salem)');
+      setFormSymbolOrCode('SSC-CHIT-1L-20M');
+      setFormMonthlyAmount(5000);
+      setFormTenureMonths(20);
+      setFormMonthsPaid(7);
+      setFormDueDay(15);
+      setFormAccumulatedGrams('');
+      setFormMaturityBonus(3500);
+      setFormStartDate('2026-04-15');
+      setFormMaturityDate('2027-11-15');
+      setFormNotes('Registered 20-month auction chit fund. Monthly call with auction dividend deduction.');
+    }
     setFormStatus('active');
-    setFormNotes(
-      presetCategory === 'gold_chit'
-        ? 'Customer pays 11 months; jeweller credits 12th month as bonus. 0% Wastage / Value Addition charges up to 18%.'
-        : presetCategory === 'silver_chit'
-        ? 'Customer pays 11 monthly installments; 12th month paid by jeweller. 0% VA and 0% making charges on silver jewellery.'
-        : 'Registered 20-month auction chit fund. Monthly call with auction dividend deduction.'
-    );
     setIsEnrollModalOpen(true);
   };
 
   // Open Edit Modal
   const handleOpenEdit = (chit: InvestmentAsset) => {
     setEditingChit(chit);
-    setFormCategory((chit.category as any) || 'gold_chit');
+    setFormCategory((chit.category as any) || 'offline_chit');
     setFormName(chit.name);
     setFormPlatform(chit.platform);
     setFormSymbolOrCode(chit.symbolOrCode || '');
-    setFormMonthlyAmount(chit.chitMonthlyAmount || chit.monthlySipAmount || 2000);
-    setFormTenureMonths(chit.chitTenureMonths || 11);
+    setFormMonthlyAmount(chit.chitMonthlyAmount || chit.monthlySipAmount || 1000);
+    setFormTenureMonths(chit.chitTenureMonths || (chit.category === 'other' ? 20 : 11));
     setFormMonthsPaid(chit.chitMonthsPaid || 0);
+    setFormDueDay(chit.dueDayOfMonth || (chit.category === 'offline_chit' ? 14 : 10));
     setFormAccumulatedGrams(chit.quantity || '');
     setFormMaturityBonus(chit.maturityBonus || 0);
     setFormStartDate(chit.purchaseDate || getLiveDateString());
@@ -161,7 +192,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
 
     let grams = Number(formAccumulatedGrams);
     if (!grams || isNaN(grams)) {
-      if (formCategory === 'gold_chit') {
+      if (formCategory === 'gold_chit' || formCategory === 'digi_gold') {
         grams = Number((investedAmount / 7380).toFixed(3));
       } else if (formCategory === 'silver_chit') {
         grams = Number((investedAmount / 97.5).toFixed(2));
@@ -170,8 +201,8 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       }
     }
 
-    const currentRate = formCategory === 'gold_chit' ? 7380 : formCategory === 'silver_chit' ? 97.5 : 5500;
-    const currentValue = formCategory === 'gold_chit' || formCategory === 'silver_chit'
+    const currentRate = formCategory === 'gold_chit' || formCategory === 'digi_gold' ? 7380 : formCategory === 'silver_chit' ? 97.5 : 1000;
+    const currentValue = formCategory === 'gold_chit' || formCategory === 'silver_chit' || formCategory === 'digi_gold'
       ? Math.round(grams * currentRate)
       : investedAmount + bonusAmt;
 
@@ -183,17 +214,18 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       investedAmount,
       currentValue,
       quantity: grams,
-      unitType: formCategory === 'gold_chit' || formCategory === 'silver_chit' ? 'grams' : 'chit_tokens',
+      unitType: formCategory === 'gold_chit' || formCategory === 'silver_chit' || formCategory === 'digi_gold' ? 'grams' : 'chit_tokens',
       isMonthlySip: true,
       monthlySipAmount: monthlyAmt,
       chitMonthlyAmount: monthlyAmt,
       chitTenureMonths: tenureMonths,
       chitMonthsPaid: monthsPaid,
+      dueDayOfMonth: Number(formDueDay) || undefined,
       maturityBonus: bonusAmt,
       status: monthsPaid >= tenureMonths || formStatus === 'matured' ? 'matured' : 'active',
       purchaseDate: formStartDate,
       maturityDate: formMaturityDate || undefined,
-      colorTag: formCategory === 'gold_chit' ? 'amber' : formCategory === 'silver_chit' ? 'cyan' : 'emerald',
+      colorTag: formCategory === 'offline_chit' ? 'purple' : formCategory === 'gold_chit' ? 'amber' : formCategory === 'silver_chit' ? 'cyan' : 'emerald',
       notes: formNotes.trim() || undefined,
       updatedAt: getLiveDateString()
     };
@@ -212,9 +244,10 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
   // Open Payment Modal
   const handleOpenPaymentModal = (chit: InvestmentAsset) => {
     const nextMonth = (chit.chitMonthsPaid || 0) + 1;
-    const monthlyAmt = chit.chitMonthlyAmount || chit.monthlySipAmount || 2000;
+    const monthlyAmt = chit.chitMonthlyAmount || chit.monthlySipAmount || 1000;
     const isGold = chit.category === 'gold_chit' || chit.name.toLowerCase().includes('gold');
     const isSilver = chit.category === 'silver_chit' || chit.name.toLowerCase().includes('silver');
+    const isOffline = chit.category === 'offline_chit' || chit.name.toLowerCase().includes('offline');
 
     const expectedGrams = isGold
       ? Number((monthlyAmt / 7380).toFixed(4))
@@ -225,10 +258,18 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
     setPaymentModalChit(chit);
     setPayDate(getLiveDateString());
     setPayAmount(monthlyAmt);
-    setPayMethod('UPI (Google Pay / PhonePe)');
-    setPayDocNo(`${chit.platform.slice(0, 3).toUpperCase()}/SLM/${nextMonth.toString().padStart(2, '0')}`);
+    setPayMethod(isOffline ? 'Cash (Physical Counterfoil)' : 'UPI (Google Pay / PhonePe)');
+    setPayDocNo(
+      isOffline
+        ? `OFFLINE-RCPT-M${nextMonth.toString().padStart(2, '0')}`
+        : `${chit.platform.slice(0, 3).toUpperCase()}/SLM/${nextMonth.toString().padStart(2, '0')}`
+    );
     setPayGrams(expectedGrams);
-    setPayNotes(`Installment Month #${nextMonth} of ${chit.chitTenureMonths || 11}`);
+    setPayNotes(
+      isOffline
+        ? `Month #${nextMonth} installment paid on ${chit.dueDayOfMonth || 14}th cycle (Physical passbook entry)`
+        : `Installment Month #${nextMonth} of ${chit.chitTenureMonths || 11}`
+    );
   };
 
   // Submit Payment Record
@@ -237,7 +278,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
     if (!paymentModalChit) return;
 
     logChitInstallmentPayment(paymentModalChit.id, {
-      amount: Number(payAmount) || paymentModalChit.chitMonthlyAmount || 2000,
+      amount: Number(payAmount) || paymentModalChit.chitMonthlyAmount || 1000,
       date: payDate,
       paymentMode: payMethod,
       docNo: payDocNo,
@@ -260,7 +301,28 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
     setDeletingChit(null);
   };
 
-  // Computed Summaries
+  // Categorization helpers
+  const isDigiBullion = (c: InvestmentAsset) =>
+    c.id === 'pothys-digi-gold' ||
+    c.id === 'pothys-digi-silver' ||
+    c.category === 'digi_gold' ||
+    c.name.toLowerCase().includes('digi gold') ||
+    c.name.toLowerCase().includes('digi silver') ||
+    Boolean(c.schemeDetails);
+
+  const isOfflineChit = (c: InvestmentAsset) =>
+    c.category === 'offline_chit' ||
+    c.id === 'chit-offline-monthly-1000' ||
+    c.name.toLowerCase().includes('offline');
+
+  const isJewellerShett = (c: InvestmentAsset) =>
+    (c.category === 'gold_chit' || c.category === 'silver_chit') && !isDigiBullion(c) && !isOfflineChit(c);
+
+  const isTraditionalChitFund = (c: InvestmentAsset) =>
+    (c.category === 'other' || c.name.toLowerCase().includes('chit fund') || (c.chitTenureMonths && c.chitTenureMonths > 11)) &&
+    !isOfflineChit(c);
+
+  // Computed Totals
   const totalMonthlyCommitment = chitSchemes.reduce(
     (s, c) => s + (c.chitMonthlyAmount || c.monthlySipAmount || 0),
     0
@@ -278,15 +340,20 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
 
   const totalBonusPerks = chitSchemes.reduce((s, c) => s + (c.maturityBonus || 0), 0);
 
+  // Offline Chit Specific Item
+  const offlineChit = chitSchemes.find(isOfflineChit);
+
   // Filter & Search Logic
   const filteredSchemes = chitSchemes.filter(chit => {
-    const isGold = chit.category === 'gold_chit' || chit.name.toLowerCase().includes('gold');
-    const isSilver = chit.category === 'silver_chit' || chit.name.toLowerCase().includes('silver');
-    const isChitFund = chit.category === 'other' || chit.name.toLowerCase().includes('chit fund') || (chit.chitTenureMonths && chit.chitTenureMonths > 11);
+    const isOffline = isOfflineChit(chit);
+    const isBullion = isDigiBullion(chit);
+    const isJeweller = isJewellerShett(chit);
+    const isChitFund = isTraditionalChitFund(chit);
     const isMatured = chit.status === 'matured' || (chit.chitMonthsPaid || 0) >= (chit.chitTenureMonths || 11);
 
-    if (activeFilter === 'gold' && !isGold) return false;
-    if (activeFilter === 'silver' && !isSilver) return false;
+    if (activeFilter === 'offline' && !isOffline) return false;
+    if (activeFilter === 'digi_bullion' && !isBullion) return false;
+    if (activeFilter === 'jeweller' && !isJeweller) return false;
     if (activeFilter === 'chit_fund' && !isChitFund) return false;
     if (activeFilter === 'active' && isMatured) return false;
     if (activeFilter === 'matured' && !isMatured) return false;
@@ -305,7 +372,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
   });
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
+    <div className="space-y-6 animate-fade-in pb-16">
       {/* 1. Header Command Strip */}
       <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1A180E] via-[#0E1528] to-[#0A0F1D] border border-amber-500/40 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1.5">
@@ -321,61 +388,249 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
             )}
             <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 flex items-center gap-1.5 shadow-md">
               <Award className="w-3.5 h-3.5" />
-              11-Month Jewellery Scheme ("Gold & Silver Shett") Command Center
+              Unified Chit & Shett Command Center
             </span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-              GRT · Lalitha · Sri Saravana · Pothys
+            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              Offline Chit (₹1k/14-Oct) · Digi Gold · Digi Silver · GRT · Lalitha
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Traditional Jeweller Gold & Silver Savings ("Shett") & Chit Funds
+            Chits, Jeweller Shett & Bullion Savings Command Center
           </h2>
           <p className="text-xs text-slate-400 max-w-3xl">
-            Monthly commitment ledger with visual 11-month and 20-month milestone roadmaps, voucher history passbooks, gram accrual calculations, and guaranteed 12th-month bonus tracking.
+            Separate monitoring for Offline Monthly Chit (₹1,000 started 14-Oct), Pothys Digi Gold & Digi Silver (₹100/day daily terminal), GRT & Lalitha 11-Month Jeweller Shett, and Traditional Chit Funds.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleOpenEnrollModal('offline_chit')}
+            className="px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white transition shadow-lg shadow-purple-500/20 flex items-center space-x-1.5 active:scale-95"
+          >
+            <Bookmark className="w-3.5 h-3.5" />
+            <span>+ Enroll Offline Chit</span>
+          </button>
           <button
             onClick={() => handleOpenEnrollModal('gold_chit')}
-            className="px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5 active:scale-95"
+            className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5 active:scale-95"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ Enroll New Chit Scheme</span>
+            <span>+ Enroll Jeweller Scheme</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Quick Access to Pothys 300-Day Daily Pay Terminal */}
-      <div
-        onClick={() => navigateToTab('daily_chit')}
-        className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/40 hover:border-amber-400/80 shadow-lg cursor-pointer transition group flex items-center justify-between gap-4"
-      >
-        <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform shrink-0">
-            <Flame className="w-5 h-5 text-slate-950" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                Pothys Swarna Mahal 300-Day Daily Deposit Terminal
-              </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40">
-                Target: ₹100 / Day
-              </span>
+      {/* 2. SPOTLIGHT: Offline Monthly Chit (₹1,000 / Started 14-Oct) */}
+      {offlineChit && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0E1528] to-purple-950/30 border border-purple-500/50 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-500 text-slate-950 flex items-center gap-1 shadow-md">
+                  <Bookmark className="w-3 h-3" />
+                  OFFLINE MONTHLY CHIT SPOTLIGHT
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/20 text-purple-200 border border-purple-500/40">
+                  Target: ₹1,000 / Month · Due Every 14th
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-800 text-slate-300">
+                  Started: 14-Oct-2026
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <span>{offlineChit.name}</span>
+                  <span className="text-xs font-normal text-purple-300">({offlineChit.platform})</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Month #1 paid on <strong>14-Oct-2026</strong> (₹1,000) · <strong>Next Due: Month #2 on 14-Nov-2026</strong> (₹1,000) · Physical counterfoil passbook tracking.
+                </p>
+              </div>
+
+              {/* 14th of Every Month Visual Milestone Stepper */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-slate-300 font-semibold">
+                    12-Month Schedule: <strong className="text-purple-300">{offlineChit.chitMonthsPaid || 1} of {offlineChit.chitTenureMonths || 12} Paid</strong>
+                  </span>
+                  <span className="text-purple-300 font-mono font-bold">
+                    {Math.round(((offlineChit.chitMonthsPaid || 1) / (offlineChit.chitTenureMonths || 12)) * 100)}% Complete
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
+                  {Array.from({ length: offlineChit.chitTenureMonths || 12 }).map((_, idx) => {
+                    const monthNum = idx + 1;
+                    const isPaid = monthNum <= (offlineChit.chitMonthsPaid || 1);
+                    const isNextDue = monthNum === (offlineChit.chitMonthsPaid || 1) + 1;
+                    const monthDate = `14-${['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'][idx % 12]}`;
+
+                    return (
+                      <div
+                        key={monthNum}
+                        className={`p-1.5 rounded-lg text-center flex flex-col justify-center items-center transition-all ${
+                          isPaid
+                            ? 'bg-gradient-to-t from-purple-700 to-purple-600 text-white font-black shadow-sm'
+                            : isNextDue
+                            ? 'bg-purple-500/20 border-2 border-purple-400 text-purple-200 animate-pulse font-extrabold'
+                            : 'bg-slate-900/80 text-slate-500 border border-slate-800'
+                        }`}
+                        title={`Month #${monthNum}: Due ${monthDate} (${isPaid ? 'PAID' : isNextDue ? 'NEXT DUE' : 'UPCOMING'})`}
+                      >
+                        <span className="text-[9px] uppercase font-mono block opacity-80">{monthDate}</span>
+                        <span className="text-[11px] font-black">{isPaid ? '✓' : `M${monthNum}`}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              300-Day Daily Deposit Terminal started on <strong>15-Oct-2026</strong> · 4-tier instant weight bonus (+7% in Days 0–75) · 0% VA & Making Charges guaranteed.
-            </p>
+
+            {/* Offline Chit Action Panel */}
+            <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-800">
+              <div className="text-left lg:text-right">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Capital Deposited</span>
+                <span className="text-xl font-black text-purple-300 font-mono">
+                  {formatCurrency(offlineChit.investedAmount)}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  Maturity Pool: <strong className="text-white font-mono">{formatCurrency((offlineChit.chitMonthlyAmount || 1000) * (offlineChit.chitTenureMonths || 12))}</strong>
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setPassbookModalChit(offlineChit)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center space-x-1 border border-slate-700"
+                >
+                  <Receipt className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Physical Passbook</span>
+                </button>
+                <button
+                  onClick={() => handleOpenPaymentModal(offlineChit)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white shadow-md active:scale-95 transition flex items-center space-x-1"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>+ Pay Month #{(offlineChit.chitMonthsPaid || 1) + 1}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 group-hover:text-amber-300 shrink-0">
-          <span>Open Daily Terminal</span>
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+      )}
+
+      {/* 3. DEDICATED SEPARATE MONITORING TABS */}
+      <div className="p-3.5 rounded-2xl bg-[#0C1222]/90 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-lg">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-black uppercase text-slate-400 px-2 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-amber-400" />
+            <span>Separate Monitor:</span>
+          </span>
+
+          {[
+            { id: 'all', label: `All Chits (${chitSchemes.length})` },
+            { id: 'offline', label: `Offline Chit (₹1k/14-Oct)` },
+            { id: 'digi_bullion', label: 'Digi Gold & Silver (Pothys)' },
+            { id: 'jeweller', label: 'Jeweller Shett (GRT & Lalitha)' },
+            { id: 'chit_fund', label: 'Chit Funds (Saravana 20M)' },
+            { id: 'active', label: `Active (${chitSchemes.filter(c => c.status !== 'matured').length})` }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveFilter(tab.id as any)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                activeFilter === tab.id
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
+                  : 'bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full md:w-64">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search Offline, Pothys, GRT..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-[#090D18] border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 3. Comprehensive Chit KPI Strip */}
+      {/* 4. CHIT DUE CALENDAR & PAYMENT MATRIX STRIP */}
+      <div className="p-4 rounded-2xl bg-[#090D18] border border-slate-800 shadow-lg space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-amber-400" />
+            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+              Monthly Chit Payment Schedule & Due Dates Matrix
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400">
+            Total Monthly Commitment: <strong className="text-amber-300 font-mono">{formatCurrency(totalMonthlyCommitment)}/mo</strong>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+          {/* Daily Digi Gold & Silver */}
+          <div
+            onClick={() => navigateToTab('daily_chit')}
+            className="p-3 rounded-xl bg-[#0C1222] border border-amber-500/30 hover:border-amber-400 transition cursor-pointer"
+          >
+            <span className="text-[10px] font-bold uppercase text-amber-400 block">Daily Deposit</span>
+            <div className="text-sm font-extrabold text-white mt-0.5">Pothys Digi Gold & Silver</div>
+            <div className="text-xs font-mono font-bold text-amber-300 mt-1">₹200 / Day</div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Day 12 of 300 · Target Active</span>
+          </div>
+
+          {/* 5th of Month: Lalitha */}
+          <div className="p-3 rounded-xl bg-[#0C1222] border border-cyan-500/30">
+            <span className="text-[10px] font-bold uppercase text-cyan-400 block">5th of Every Month</span>
+            <div className="text-sm font-extrabold text-white mt-0.5">Lalitha Silver Jewel Scheme</div>
+            <div className="text-xs font-mono font-bold text-cyan-300 mt-1">₹3,000 / Month</div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Month 4 of 11 Paid · Next: 05-Nov</span>
+          </div>
+
+          {/* 10th of Month: GRT */}
+          <div className="p-3 rounded-xl bg-[#0C1222] border border-yellow-500/30">
+            <span className="text-[10px] font-bold uppercase text-yellow-400 block">10th of Every Month</span>
+            <div className="text-sm font-extrabold text-white mt-0.5">GRT Golden Eleven (22K)</div>
+            <div className="text-xs font-mono font-bold text-yellow-300 mt-1">₹2,000 / Month</div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Month 6 of 11 Paid · Next: 10-Nov</span>
+          </div>
+
+          {/* 14th of Month: Offline Chit */}
+          <div className="p-3 rounded-xl bg-purple-500/15 border border-purple-500/40">
+            <span className="text-[10px] font-bold uppercase text-purple-300 block">14th of Every Month</span>
+            <div className="text-sm font-extrabold text-white mt-0.5">Offline Physical Chit</div>
+            <div className="text-xs font-mono font-bold text-purple-200 mt-1">₹1,000 / Month</div>
+            <span className="text-[10px] text-purple-300 block mt-0.5">Started 14-Oct · Next: 14-Nov</span>
+          </div>
+
+          {/* 15th of Month: Saravana */}
+          <div className="p-3 rounded-xl bg-[#0C1222] border border-emerald-500/30">
+            <span className="text-[10px] font-bold uppercase text-emerald-400 block">15th of Every Month</span>
+            <div className="text-sm font-extrabold text-white mt-0.5">Sri Saravana Chit Fund</div>
+            <div className="text-xs font-mono font-bold text-emerald-300 mt-1">₹5,000 / Month</div>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Month 7 of 20 Paid · Next: 15-Nov</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Comprehensive KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="p-4 rounded-2xl bg-[#0C1222]/90 border border-yellow-500/30 shadow-lg">
           <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-400 block mb-1">
@@ -386,7 +641,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
             <span className="text-xs font-normal text-slate-400 ml-1">Plans</span>
           </div>
           <p className="mt-1.5 text-[11px] text-slate-400">
-            GRT · Lalitha · Saravana
+            Digi Bullion + Offline + Jeweller Shett
           </p>
         </div>
 
@@ -399,7 +654,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
             <span className="text-xs font-normal text-slate-400">/mo</span>
           </div>
           <p className="mt-1.5 text-[11px] text-slate-400">
-            Due 5th to 15th each month
+            Offline ₹1k + Shett ₹5k + Chit ₹5k
           </p>
         </div>
 
@@ -442,67 +697,31 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
         </div>
       </div>
 
-      {/* 4. Filter Toolbar & Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0C1222]/80 border border-slate-800">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {[
-            { id: 'all', label: `All Schemes (${chitSchemes.length})` },
-            { id: 'gold', label: 'Gold Shett (11M)' },
-            { id: 'silver', label: 'Silver Shett (11M)' },
-            { id: 'chit_fund', label: 'Chit Funds (20M)' },
-            { id: 'active', label: `Active (${chitSchemes.filter(c => c.status !== 'matured').length})` },
-            { id: 'matured', label: `Matured (${chitSchemes.filter(c => c.status === 'matured').length})` }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                activeFilter === tab.id
-                  ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
-                  : 'bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full md:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search GRT, Lalitha, Chit..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-[#090D18] border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 5. Chit Scheme Progress Cards Grid */}
+      {/* 6. Chit Scheme Cards Grid (Dedicated Separate Monitors) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {filteredSchemes.map(chit => {
-          const tenure = chit.chitTenureMonths || 11;
+          const isOffline = isOfflineChit(chit);
+          const isBullion = isDigiBullion(chit);
+          const isGold = chit.category === 'gold_chit' || chit.name.toLowerCase().includes('gold');
+          const isSilver = chit.category === 'silver_chit' || chit.name.toLowerCase().includes('silver');
+
+          const tenure = chit.chitTenureMonths || (isBullion ? 10 : isOffline ? 12 : chit.category === 'other' ? 20 : 11);
           const paid = chit.chitMonthsPaid || 0;
           const progressPct = Math.min(100, Math.round((paid / tenure) * 100));
           const monthlyAmt = chit.chitMonthlyAmount || chit.monthlySipAmount || 0;
-          const isGold = chit.category === 'gold_chit' || chit.name.toLowerCase().includes('gold');
-          const isSilver = chit.category === 'silver_chit' || chit.name.toLowerCase().includes('silver');
           const isMatured = chit.status === 'matured' || paid >= tenure;
           const vouchersCount = chit.transactions?.length || 0;
 
           return (
             <div
               key={chit.id}
-              className="p-5 rounded-2xl bg-gradient-to-b from-[#0D1322] to-[#090D18] border border-slate-800 hover:border-amber-500/40 transition-all shadow-xl relative overflow-hidden flex flex-col justify-between"
+              className={`p-5 rounded-2xl border transition-all shadow-xl relative overflow-hidden flex flex-col justify-between ${
+                isOffline
+                  ? 'bg-gradient-to-b from-purple-950/30 via-[#0D1322] to-[#090D18] border-purple-500/40 hover:border-purple-400'
+                  : isBullion
+                  ? 'bg-gradient-to-b from-amber-950/30 via-[#0D1322] to-[#090D18] border-amber-500/40 hover:border-amber-400'
+                  : 'bg-gradient-to-b from-[#0D1322] to-[#090D18] border-slate-800 hover:border-amber-500/40'
+              }`}
             >
               <div className="space-y-4">
                 {/* Header */}
@@ -511,16 +730,33 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                          isGold
+                          isOffline
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                            : isBullion
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            : isGold
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                             : isSilver
                             ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                             : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                         }`}
                       >
-                        {isGold ? 'Gold Shett (11M)' : isSilver ? 'Silver Shett (11M)' : 'Family Chit Fund (20M)'}
+                        {isOffline
+                          ? 'Offline Chit (Monthly)'
+                          : isBullion
+                          ? 'Digi Bullion Plan'
+                          : isGold
+                          ? 'Gold Shett (11M)'
+                          : isSilver
+                          ? 'Silver Shett (11M)'
+                          : 'Family Chit Fund (20M)'}
                       </span>
                       <span className="text-xs font-semibold text-slate-400">{chit.platform}</span>
+                      {chit.dueDayOfMonth && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                          Due Every {chit.dueDayOfMonth}th
+                        </span>
+                      )}
                       {isMatured && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                           Matured
@@ -534,25 +770,28 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Monthly Commitment</span>
-                    <div className="text-lg font-black text-amber-300 font-mono">{formatCurrency(monthlyAmt)}</div>
-                    <span className="text-[10px] text-slate-400">Due 10th-15th</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Commitment</span>
+                    <div className="text-lg font-black text-amber-300 font-mono">
+                      {isBullion ? '₹100/day' : `${formatCurrency(monthlyAmt)}/mo`}
+                    </div>
+                    <span className="text-[10px] text-slate-400">
+                      {chit.dueDayOfMonth ? `Due on ${chit.dueDayOfMonth}th` : 'Due 10th-15th'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Milestone Step Progress Visualizer */}
+                {/* Milestone Stepper Visualizer */}
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-300 font-semibold">
-                      Milestone Progress: <strong className="text-amber-400">{paid} of {tenure} Paid</strong>
+                      Milestones: <strong className="text-amber-400">{paid} of {tenure} Paid</strong>
                     </span>
                     <span className="text-amber-400 font-mono font-bold">{progressPct}% Complete</span>
                   </div>
 
-                  {/* Grid of Months */}
                   <div
-                    className={`grid gap-1.5 pt-1`}
-                    style={{ gridTemplateColumns: `repeat(${tenure <= 11 ? 11 : 10}, minmax(0, 1fr))` }}
+                    className="grid gap-1.5 pt-1"
+                    style={{ gridTemplateColumns: `repeat(${tenure <= 12 ? (tenure <= 11 ? 11 : 12) : 10}, minmax(0, 1fr))` }}
                   >
                     {Array.from({ length: tenure }).map((_, idx) => {
                       const stepNum = idx + 1;
@@ -565,13 +804,17 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                           key={stepNum}
                           className={`h-7 rounded flex items-center justify-center text-[10px] font-black transition-all ${
                             isCompleted
-                              ? isGold
+                              ? isOffline
+                                ? 'bg-gradient-to-t from-purple-700 to-purple-600 text-white shadow-sm'
+                                : isGold || isBullion
                                 ? 'bg-gradient-to-t from-amber-600 to-amber-500 text-slate-950 shadow-sm'
                                 : isSilver
                                 ? 'bg-gradient-to-t from-cyan-600 to-cyan-500 text-slate-950 shadow-sm'
                                 : 'bg-gradient-to-t from-emerald-600 to-emerald-500 text-slate-950 shadow-sm'
                               : isCurrent
-                              ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-300 animate-pulse font-extrabold'
+                              ? isOffline
+                                ? 'bg-purple-500/20 border-2 border-purple-400 text-purple-200 animate-pulse font-extrabold'
+                                : 'bg-amber-500/20 border-2 border-amber-500 text-amber-300 animate-pulse font-extrabold'
                               : isLastStep
                               ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30'
                               : 'bg-slate-900/80 text-slate-500 border border-slate-800'
@@ -585,14 +828,14 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Scheme Metrics: Accumulated Weight, Total Invested, Market Value */}
+                {/* Scheme Highlights */}
                 <div className="grid grid-cols-3 gap-2.5 pt-2 border-t border-slate-800/80 text-xs">
                   <div className="p-2.5 rounded-xl bg-[#090D18] border border-slate-800">
                     <span className="text-[10px] text-slate-400 block uppercase font-bold">
-                      {isGold ? 'Gold Booked' : isSilver ? 'Silver Booked' : 'Paid Calls'}
+                      {isGold || isSilver || isBullion ? 'Booked Weight' : 'Paid Calls'}
                     </span>
                     <span className="text-sm font-black text-amber-300 font-mono">
-                      {chit.quantity ? `${chit.quantity}${isGold || isSilver ? 'g' : ' Calls'}` : '—'}
+                      {chit.quantity ? `${chit.quantity}${isGold || isSilver || isBullion ? 'g' : ' Calls'}` : '—'}
                     </span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-[#090D18] border border-slate-800">
@@ -609,19 +852,21 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Guaranteed Jeweller Bonus Perk Badge */}
+                {/* Bonus Perk / Terms Badge */}
                 <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between">
                   <div className="flex items-center space-x-1.5 text-amber-300">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span className="font-bold">Maturity Perk:</span>
                     <span className="text-amber-200">
                       {chit.maturityBonus
-                        ? `+${formatCurrency(chit.maturityBonus)} Free Month Contribution`
-                        : '0% Wastage / VA charges on jewellery'}
+                        ? `+${formatCurrency(chit.maturityBonus)} Bonus Contribution`
+                        : isBullion
+                        ? '+7% Instant Bonus Weight in Days 0-75'
+                        : '0% Wastage / VA charges on gold'}
                     </span>
                   </div>
                   <span className="text-[10px] font-black text-amber-400 uppercase bg-amber-500/20 px-2 py-0.5 rounded">
-                    Month 12 Free
+                    {isBullion ? '7% Bonus Tier' : 'Bonus Perk'}
                   </span>
                 </div>
 
@@ -662,20 +907,32 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleOpenPaymentModal(chit)}
-                    disabled={isMatured}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-md active:scale-95 ${
-                      isMatured
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
-                        : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
-                    }`}
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>
-                      {isMatured ? 'Scheme Matured!' : `+ Pay Month #${paid + 1} (${formatCurrency(monthlyAmt)})`}
-                    </span>
-                  </button>
+                  {isBullion ? (
+                    <button
+                      onClick={() => navigateToTab('daily_chit')}
+                      className="px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 transition flex items-center space-x-1 shadow-md active:scale-95"
+                    >
+                      <Flame className="w-3.5 h-3.5" />
+                      <span>Open 300D Terminal</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleOpenPaymentModal(chit)}
+                      disabled={isMatured}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center space-x-1.5 shadow-md active:scale-95 ${
+                        isMatured
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
+                          : isOffline
+                          ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white'
+                          : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        {isMatured ? 'Scheme Matured!' : `+ Pay Month #${paid + 1} (${formatCurrency(monthlyAmt)})`}
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -683,24 +940,33 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
         })}
       </div>
 
-      {/* 6. Jeweller Chit Schemes ("Shett") Master Register Table */}
+      {/* 7. Master Register Table */}
       <div className="rounded-2xl bg-[#0C1222]/90 border border-yellow-500/30 shadow-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#0B101D]">
           <div className="flex items-center space-x-2">
             <Award className="w-4 h-4 text-amber-400" />
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              Jeweller Chit Schemes ("Shett") Master Register
+              All Chits & Jeweller Schemes Master Register
             </h3>
             <span className="text-xs text-yellow-400 font-mono">({filteredSchemes.length} Schemes)</span>
           </div>
 
-          <button
-            onClick={() => handleOpenEnrollModal('gold_chit')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-yellow-500 hover:bg-yellow-400 text-slate-950 transition flex items-center space-x-1 shadow-md active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Enroll New Scheme</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleOpenEnrollModal('offline_chit')}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition flex items-center space-x-1 shadow-md active:scale-95"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>+ Offline Chit</span>
+            </button>
+            <button
+              onClick={() => handleOpenEnrollModal('gold_chit')}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-yellow-500 hover:bg-yellow-400 text-slate-950 transition flex items-center space-x-1 shadow-md active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Jeweller Scheme</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -709,12 +975,12 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
               <tr>
                 <th className="px-5 py-3.5">Scheme & Merchant</th>
                 <th className="px-4 py-3.5">Category</th>
-                <th className="px-4 py-3.5">Monthly Installment</th>
+                <th className="px-4 py-3.5">Installment Target</th>
                 <th className="px-4 py-3.5">Milestone Progress</th>
-                <th className="px-4 py-3.5">Accumulated Weight</th>
+                <th className="px-4 py-3.5">Weight / Quantity</th>
                 <th className="px-4 py-3.5">Total Invested</th>
                 <th className="px-4 py-3.5">Current Value</th>
-                <th className="px-4 py-3.5">12th Month Bonus</th>
+                <th className="px-4 py-3.5">Due Date</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -723,6 +989,8 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 const paid = scheme.chitMonthsPaid || 0;
                 const tenure = scheme.chitTenureMonths || 11;
                 const monthly = scheme.chitMonthlyAmount || scheme.monthlySipAmount || 0;
+                const isOffline = isOfflineChit(scheme);
+                const isBullion = isDigiBullion(scheme);
                 const isGold = scheme.category === 'gold_chit' || scheme.name.toLowerCase().includes('gold');
                 const isSilver = scheme.category === 'silver_chit' || scheme.name.toLowerCase().includes('silver');
                 const isMatured = scheme.status === 'matured' || paid >= tenure;
@@ -737,29 +1005,33 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     <td className="px-4 py-4">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                          isGold
+                          isOffline
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            : isBullion
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            : isGold
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                             : isSilver
                             ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                             : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                         }`}
                       >
-                        {isGold ? 'Gold 11M' : isSilver ? 'Silver 11M' : 'Chit Fund'}
+                        {isOffline ? 'Offline Chit' : isBullion ? 'Digi Bullion' : isGold ? 'Gold 11M' : isSilver ? 'Silver 11M' : 'Chit Fund'}
                       </span>
                     </td>
 
                     <td className="px-4 py-4 font-mono font-bold text-amber-300">
-                      {formatCurrency(monthly)}
+                      {isBullion ? '₹100/day' : formatCurrency(monthly)}
                     </td>
 
                     <td className="px-4 py-4">
                       <div className="space-y-1">
                         <span className="text-xs font-bold text-white font-mono">
-                          Month {paid} / {tenure} Paid
+                          {isBullion ? `Day ${scheme.schemeDetails?.activeDayIndex || 11} / 300` : `Month ${paid} / ${tenure} Paid`}
                         </span>
                         <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-amber-500 rounded-full"
+                            className={`h-full rounded-full ${isOffline ? 'bg-purple-500' : 'bg-amber-500'}`}
                             style={{ width: `${Math.min(100, (paid / tenure) * 100)}%` }}
                           />
                         </div>
@@ -767,7 +1039,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     </td>
 
                     <td className="px-4 py-4 font-mono font-bold text-slate-200">
-                      {scheme.quantity ? `${scheme.quantity}${isGold || isSilver ? 'g' : ' calls'}` : '—'}
+                      {scheme.quantity ? `${scheme.quantity}${isGold || isSilver || isBullion ? 'g' : ' calls'}` : '—'}
                     </td>
 
                     <td className="px-4 py-4 font-mono text-white">
@@ -779,8 +1051,8 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     </td>
 
                     <td className="px-4 py-4">
-                      <span className="px-2 py-0.5 rounded text-[11px] bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
-                        {scheme.maturityBonus ? `+${formatCurrency(scheme.maturityBonus)} Free` : '0% VA Perks'}
+                      <span className="text-xs text-slate-300 font-medium">
+                        {scheme.dueDayOfMonth ? `Every ${scheme.dueDayOfMonth}th` : isBullion ? 'Daily' : '10th-15th'}
                       </span>
                     </td>
 
@@ -825,7 +1097,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 7. MODAL: Enroll New Chit / Shett Scheme (CREATE)                         */}
+      {/* 8. MODAL: Enroll New Chit / Shett Scheme (CREATE)                         */}
       {/* ========================================================================= */}
       {isEnrollModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -837,10 +1109,10 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white">
-                    Enroll New Chit Scheme ("Shett")
+                    Enroll New Chit Scheme
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Add 11-Month Jeweller Scheme, Silver Savings, or Chit Fund
+                    Offline Chit, Jeweller Shett, or Traditional Chit Fund
                   </p>
                 </div>
               </div>
@@ -856,8 +1128,9 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
               {/* Type Switcher */}
               <div className="space-y-1.5">
                 <label className="text-slate-300 font-bold">Scheme Category *</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
+                    { id: 'offline_chit', label: 'Offline Chit', icon: <Bookmark className="w-3.5 h-3.5 text-purple-400" /> },
                     { id: 'gold_chit', label: 'Gold Shett (11M)', icon: <Coins className="w-3.5 h-3.5 text-amber-400" /> },
                     { id: 'silver_chit', label: 'Silver Shett (11M)', icon: <Layers className="w-3.5 h-3.5 text-cyan-400" /> },
                     { id: 'other', label: 'Chit Fund (20M)', icon: <Percent className="w-3.5 h-3.5 text-emerald-400" /> }
@@ -867,31 +1140,40 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                       key={cat.id}
                       onClick={() => {
                         setFormCategory(cat.id as any);
-                        if (cat.id === 'gold_chit') {
+                        if (cat.id === 'offline_chit') {
+                          setFormPlatform('Offline Physical Chit / Local Committee');
+                          setFormMonthlyAmount(1000);
+                          setFormTenureMonths(12);
+                          setFormDueDay(14);
+                          setFormMaturityBonus(1000);
+                        } else if (cat.id === 'gold_chit') {
                           setFormPlatform('GRT Jewellers');
                           setFormMonthlyAmount(2000);
                           setFormTenureMonths(11);
+                          setFormDueDay(10);
                           setFormMaturityBonus(2000);
                         } else if (cat.id === 'silver_chit') {
                           setFormPlatform('Lalitha Thanga Maligai');
                           setFormMonthlyAmount(3000);
                           setFormTenureMonths(11);
+                          setFormDueDay(5);
                           setFormMaturityBonus(3000);
                         } else {
                           setFormPlatform('Sri Saravana Chits (Salem)');
                           setFormMonthlyAmount(5000);
                           setFormTenureMonths(20);
+                          setFormDueDay(15);
                           setFormMaturityBonus(3500);
                         }
                       }}
-                      className={`p-2.5 rounded-xl border text-left flex items-center space-x-2 transition ${
+                      className={`p-2 rounded-xl border text-left flex items-center space-x-1.5 transition ${
                         formCategory === cat.id
                           ? 'border-amber-500 bg-amber-500/15 text-white font-bold'
                           : 'border-slate-800 bg-[#090D18] text-slate-400 hover:border-slate-700'
                       }`}
                     >
                       {cat.icon}
-                      <span>{cat.label}</span>
+                      <span className="text-[11px] truncate">{cat.label}</span>
                     </button>
                   ))}
                 </div>
@@ -905,40 +1187,40 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   required
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
-                  placeholder="e.g. GRT Golden Eleven, Lalitha Silver Scheme"
+                  placeholder="e.g. Offline Monthly Chit (₹1,000 / 14-Oct)"
                   className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              {/* Jeweller / Platform & Account Number */}
+              {/* Platform & Account Number */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Jeweller / Platform *</label>
+                  <label className="text-slate-300 font-bold">Platform / Collector *</label>
                   <input
                     type="text"
                     required
                     value={formPlatform}
                     onChange={e => setFormPlatform(e.target.value)}
-                    placeholder="GRT, Lalitha, Pothys, Saravana"
+                    placeholder="GRT, Lalitha, Local Committee"
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Account / Passbook Code</label>
+                  <label className="text-slate-300 font-bold">Passbook Code / Receipt ID</label>
                   <input
                     type="text"
                     value={formSymbolOrCode}
                     onChange={e => setFormSymbolOrCode(e.target.value)}
-                    placeholder="e.g. GRT-GE-90812"
+                    placeholder="e.g. OFFLINE-1000"
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
               </div>
 
-              {/* Monthly Amount & Tenure */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Monthly Amount, Tenure & Due Day */}
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Monthly Installment (₹) *</label>
+                  <label className="text-slate-300 font-bold">Monthly Due (₹) *</label>
                   <input
                     type="number"
                     required
@@ -949,14 +1231,24 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Total Tenure (Months) *</label>
+                  <label className="text-slate-300 font-bold">Tenure (Months) *</label>
                   <input
                     type="number"
                     required
                     min={1}
-                    max={60}
                     value={formTenureMonths}
                     onChange={e => setFormTenureMonths(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-bold">Due Day</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={formDueDay}
+                    onChange={e => setFormDueDay(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -965,7 +1257,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
               {/* Months Paid & Accumulated Grams */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Already Paid Months</label>
+                  <label className="text-slate-300 font-bold">Months Already Paid</label>
                   <input
                     type="number"
                     min={0}
@@ -973,25 +1265,24 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     onChange={e => setFormMonthsPaid(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
                   />
-                  <span className="text-[10px] text-slate-500">0 for new enrolment</span>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Accumulated Grams (Optional)</label>
+                  <label className="text-slate-300 font-bold">Accumulated Grams</label>
                   <input
                     type="number"
                     step="any"
                     value={formAccumulatedGrams}
                     onChange={e => setFormAccumulatedGrams(e.target.value)}
-                    placeholder="Auto-calculated if empty"
+                    placeholder="Optional for gold/silver"
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-emerald-400 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
-              {/* Maturity Bonus (12th Month Free) & Start Date */}
+              {/* Maturity Bonus & Start Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">12th Month Bonus (₹)</label>
+                  <label className="text-slate-300 font-bold">Maturity Perk / Bonus (₹)</label>
                   <input
                     type="number"
                     value={formMaturityBonus}
@@ -1010,14 +1301,14 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Notes & Perks */}
+              {/* Notes */}
               <div className="space-y-1">
-                <label className="text-slate-300 font-bold">Scheme Notes & Jeweller Perks</label>
+                <label className="text-slate-300 font-bold">Notes & Terms</label>
                 <textarea
                   rows={2}
                   value={formNotes}
                   onChange={e => setFormNotes(e.target.value)}
-                  placeholder="0% Wastage / VA charges, pooja silver articles, redemption showroom..."
+                  placeholder="Payment notes, physical passbook location, committee contact..."
                   className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -1044,7 +1335,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 8. MODAL: Edit Chit Scheme (UPDATE)                                      */}
+      {/* 9. MODAL: Edit Chit Scheme (UPDATE)                                      */}
       {/* ========================================================================= */}
       {editingChit && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1078,7 +1369,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Jeweller / Platform</label>
+                  <label className="text-slate-300 font-bold">Platform / Collector</label>
                   <input
                     type="text"
                     required
@@ -1098,9 +1389,9 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Monthly Installment (₹)</label>
+                  <label className="text-slate-300 font-bold">Monthly Due (₹)</label>
                   <input
                     type="number"
                     required
@@ -1110,7 +1401,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Total Tenure (Months)</label>
+                  <label className="text-slate-300 font-bold">Total Tenure</label>
                   <input
                     type="number"
                     required
@@ -1119,11 +1410,22 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-bold">Due Day</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={formDueDay}
+                    onChange={e => setFormDueDay(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Months Paid So Far</label>
+                  <label className="text-slate-300 font-bold">Months Paid</label>
                   <input
                     type="number"
                     min={0}
@@ -1146,7 +1448,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">12th Month Bonus (₹)</label>
+                  <label className="text-slate-300 font-bold">Maturity Perk (₹)</label>
                   <input
                     type="number"
                     value={formMaturityBonus}
@@ -1168,7 +1470,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-bold">Notes & Perks</label>
+                <label className="text-slate-300 font-bold">Notes</label>
                 <textarea
                   rows={2}
                   value={formNotes}
@@ -1198,7 +1500,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 9. MODAL: Record Installment Payment (UPDATE & VOUCHER ENTRY)             */}
+      {/* 10. MODAL: Record Installment Payment (UPDATE & VOUCHER ENTRY)            */}
       {/* ========================================================================= */}
       {paymentModalChit && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1211,7 +1513,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     Record Installment Payment
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Month #{(paymentModalChit.chitMonthsPaid || 0) + 1} of {paymentModalChit.chitTenureMonths || 11} · {paymentModalChit.platform}
+                    Month #{(paymentModalChit.chitMonthsPaid || 0) + 1} of {paymentModalChit.chitTenureMonths || 12} · {paymentModalChit.platform}
                   </p>
                 </div>
               </div>
@@ -1255,15 +1557,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     required
                     min={1}
                     value={payAmount}
-                    onChange={e => {
-                      const val = Number(e.target.value);
-                      setPayAmount(e.target.value);
-                      if (paymentModalChit.category === 'gold_chit') {
-                        setPayGrams(Number((val / 7380).toFixed(4)));
-                      } else if (paymentModalChit.category === 'silver_chit') {
-                        setPayGrams(Number((val / 97.5).toFixed(3)));
-                      }
-                    }}
+                    onChange={e => setPayAmount(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -1276,10 +1570,10 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   onChange={e => setPayMethod(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                 >
+                  <option value="Cash (Physical Counterfoil)">Cash (Physical Counterfoil / Showroom)</option>
                   <option value="UPI (Google Pay / PhonePe)">UPI (Google Pay / PhonePe / Paytm)</option>
                   <option value="Net Banking / IMPS">Net Banking / IMPS / NEFT</option>
                   <option value="Debit / Credit Card">Debit / Credit Card</option>
-                  <option value="Cash at Showroom">Cash at Showroom</option>
                   <option value="Auto-Debit NACH">Auto-Debit NACH</option>
                 </select>
               </div>
@@ -1291,18 +1585,18 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     type="text"
                     value={payDocNo}
                     onChange={e => setPayDocNo(e.target.value)}
-                    placeholder="e.g. GRT/SLM/2026/11"
+                    placeholder="e.g. OFFLINE-RCPT-02"
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">Grams Credited</label>
+                  <label className="text-slate-300 font-bold">Grams Booked (If Bullion)</label>
                   <input
                     type="number"
                     step="any"
                     value={payGrams}
                     onChange={e => setPayGrams(e.target.value)}
-                    placeholder="Grams booked"
+                    placeholder="Auto or 0"
                     className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-emerald-400 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -1314,7 +1608,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                   type="text"
                   value={payNotes}
                   onChange={e => setPayNotes(e.target.value)}
-                  placeholder="Showroom receipt confirmed"
+                  placeholder="Collector receipt confirmed"
                   className="w-full px-3 py-2 rounded-xl bg-[#090D18] border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -1341,7 +1635,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 10. MODAL: Passbook & Voucher Ledger (READ & MANAGE VOUCHERS)              */}
+      {/* 11. MODAL: Passbook & Voucher Ledger (READ & MANAGE VOUCHERS)             */}
       {/* ========================================================================= */}
       {passbookModalChit && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1354,7 +1648,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                     Passbook & Voucher History: {passbookModalChit.name}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    {passbookModalChit.platform} · {passbookModalChit.chitMonthsPaid || 0} of {passbookModalChit.chitTenureMonths || 11} Installments Paid
+                    {passbookModalChit.platform} · {passbookModalChit.chitMonthsPaid || 0} of {passbookModalChit.chitTenureMonths || 12} Installments Paid
                   </p>
                 </div>
               </div>
@@ -1375,9 +1669,11 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Bullion Booked</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Accumulated Weight / Calls</span>
                 <span className="text-base font-black text-amber-300 font-mono">
-                  {passbookModalChit.quantity ? `${passbookModalChit.quantity}g` : '—'}
+                  {passbookModalChit.quantity
+                    ? `${passbookModalChit.quantity}${passbookModalChit.unitType === 'grams' ? 'g' : ' Calls'}`
+                    : '—'}
                 </span>
               </div>
               <div>
@@ -1423,7 +1719,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
                           <span className="font-black text-amber-300 font-mono text-sm block">
                             {formatCurrency(tx.amount)}
                           </span>
-                          {tx.weightGrams ? (
+                          {tx.weightGrams && tx.weightGrams > 0 ? (
                             <span className="text-[10px] font-mono text-emerald-400">
                               +{tx.weightGrams}g booked
                             </span>
@@ -1474,7 +1770,7 @@ export const ChitSchemesDashboard: React.FC<ChitSchemesDashboardProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 11. MODAL: Delete Chit Scheme Confirmation (DELETE)                      */}
+      {/* 12. MODAL: Delete Chit Scheme Confirmation (DELETE)                      */}
       {/* ========================================================================= */}
       {deletingChit && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">

@@ -251,7 +251,14 @@ export const InvestmentsPage: React.FC = () => {
 
   // Chit schemes
   const chitSchemes = investments.filter(
-    i => i.category === 'gold_chit' || i.category === 'silver_chit' || i.chitTenureMonths
+    i =>
+      i.category === 'gold_chit' ||
+      i.category === 'silver_chit' ||
+      i.category === 'offline_chit' ||
+      i.category === 'digi_gold' ||
+      i.id === 'pothys-digi-gold' ||
+      i.id === 'pothys-digi-silver' ||
+      i.chitTenureMonths !== undefined
   );
 
   // Filtered investments
@@ -260,9 +267,9 @@ export const InvestmentsPage: React.FC = () => {
       activeCategory === 'all'
         ? true
         : activeCategory === 'chits'
-        ? item.category === 'gold_chit' || item.category === 'silver_chit' || item.chitTenureMonths
+        ? item.category === 'gold_chit' || item.category === 'silver_chit' || item.category === 'offline_chit' || item.chitTenureMonths
         : activeCategory === 'bullion'
-        ? item.category === 'digi_gold' || item.category === 'gold_chit' || item.category === 'silver_chit'
+        ? item.category === 'digi_gold' || item.category === 'gold_chit' || item.category === 'silver_chit' || item.category === 'offline_chit'
         : activeCategory === 'groww_stocks'
         ? item.category === 'groww_stocks'
         : activeCategory === 'funds'

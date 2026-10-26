@@ -1064,6 +1064,45 @@ export const initialInvestments: InvestmentAsset[] = [
         notes: 'Month #7 Chit Call (UPI) — Next Due Month #8 on 15-Nov-2026'
       }
     ]
+  },
+  {
+    id: 'chit-offline-monthly-1000',
+    name: 'Offline Monthly Chit (₹1,000 / 14-Oct)',
+    category: 'offline_chit',
+    platform: 'Offline Physical Chit / Local Committee (Salem)',
+    investedAmount: 1000,
+    currentValue: 1000,
+    quantity: 1,
+    unitType: 'chit_tokens',
+    buyPriceAverage: 1000,
+    currentPrice: 1000,
+    isMonthlySip: true,
+    monthlySipAmount: 1000,
+    chitMonthlyAmount: 1000,
+    chitTenureMonths: 12,
+    chitMonthsPaid: 1,
+    dueDayOfMonth: 14,
+    maturityBonus: 1000,
+    symbolOrCode: 'OFFLINE-CHIT-1000',
+    status: 'active',
+    purchaseDate: '2026-10-14',
+    maturityDate: '2027-10-14',
+    colorTag: 'purple',
+    notes: 'Offline physical savings chit fund started on 14-Oct-2026. Monthly installment ₹1,000 due on the 14th of every month. Month #1 paid on 14-Oct-2026; Next Due: Month #2 on 14-Nov-2026.',
+    updatedAt: getLiveDateString(),
+    transactions: [
+      {
+        id: 'tx-offline-1',
+        date: '2026-10-14',
+        amount: 1000,
+        rate: 1000,
+        weightGrams: 1,
+        bonusWeightGrams: 0,
+        bonusPercentage: 0,
+        docNo: 'OFFLINE-RCPT-M01',
+        notes: 'Month #1 Enrollment Installment paid in cash (Physical passbook entry on 14-Oct-2026)'
+      }
+    ]
   }
 ];
 

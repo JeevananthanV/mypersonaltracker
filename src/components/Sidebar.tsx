@@ -204,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
         { id: 'digi_gold', label: 'Digital Gold (22K Pothys)', icon: <Coins className="w-3.5 h-3.5 text-yellow-400" />, badge: '0.0395g' },
         { id: 'digi_silver', label: 'Digital Silver (999 Pure)', icon: <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />, badge: '4.954g' },
         { id: 'groww_stocks', label: 'Groww Stocks (ITC & TATAGOLD)', icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />, badge: '₹1,821' },
-        { id: 'chits', label: 'Jeweller Chits (11M Shett)', icon: <Award className="w-3.5 h-3.5 text-amber-400" />, badge: '₹4k/mo' },
+        { id: 'chits', label: 'Chits & Shett (Offline & Digi)', icon: <Award className="w-3.5 h-3.5 text-amber-400" />, badge: 'Offline ₹1k' },
         { id: 'mutual_funds', label: 'Mutual Funds & SIPs', icon: <Sparkles className="w-3.5 h-3.5 text-indigo-400" />, badge: '₹2k/mo' }
       ]
     },

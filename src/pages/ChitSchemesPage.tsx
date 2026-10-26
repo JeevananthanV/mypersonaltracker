@@ -6,7 +6,14 @@ export const ChitSchemesPage: React.FC = () => {
   const { investments, navigateToTab } = useLifeOS();
 
   const chitSchemes = investments.filter(
-    i => i.category === 'gold_chit' || i.category === 'silver_chit' || i.chitTenureMonths
+    i =>
+      i.category === 'gold_chit' ||
+      i.category === 'silver_chit' ||
+      i.category === 'offline_chit' ||
+      i.category === 'digi_gold' ||
+      i.id === 'pothys-digi-gold' ||
+      i.id === 'pothys-digi-silver' ||
+      i.chitTenureMonths !== undefined
   );
 
   return (
