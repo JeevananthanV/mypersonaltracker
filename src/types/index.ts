@@ -31,7 +31,8 @@ export type NavTab =
   // Productivity Trackers & Pages
   | 'tasks' 
   | 'habits'
-  | 'review';
+  | 'review'
+  | 'calendar';
 
 // Comprehensive Loan Account Interface
 export interface LoanAccount {
@@ -256,6 +257,11 @@ export interface SkillModule {
   resourceUrl?: string;
   notes?: string;
   updatedAt: string;
+  estimatedCompletionDate?: string;
+  studySchedule?: string;
+  calendarEventId?: string;
+  lastCalendarSync?: string;
+  nextSessionDate?: string;
 }
 
 export interface CareerOverview {

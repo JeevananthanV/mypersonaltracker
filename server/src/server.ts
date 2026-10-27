@@ -60,6 +60,18 @@ app.get('/', (req: any, res: any) => {
 
 app.use('/api', apiRouter);
 
+// Error middleware fallback for database offline states
+app.use((err: any, req: any, res: any, next: any) => {
+  if (err.name === 'MongooseError' || err.name === 'MongoNetworkError' || err.message?.includes('buffering timed out')) {
+    console.warn('[AI Studio] Database offline — returning mock empty response');
+    if (req.method === 'GET') {
+      return res.json(req.path.endsWith('s') || req.path.endsWith('s/') ? [] : {});
+    }
+    return res.status(503).json({ error: 'Service temporarily unavailable (database offline)' });
+  }
+  next(err);
+});
+
 // Start server immediately so API is responsive without waiting for DB timeout
 app.listen(PORT, () => {
   console.log(`\n======================================================`);

@@ -18,6 +18,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 import { useLifeOS } from '../context/LifeOSContext';
 import { QuickAddModal } from '../components/QuickAddModal';
 import { SkillStatus } from '../types';
+import { AICourseProgressDashboard } from '../components/career/AICourseProgressDashboard';
 
 export const CareerPage: React.FC = () => {
   const {
@@ -25,7 +26,8 @@ export const CareerPage: React.FC = () => {
     updateCareerOverview,
     skills,
     logPracticeHours,
-    updateSkill
+    updateSkill,
+    navigateToTab
   } = useLifeOS();
 
   const [modalOpen, setModalOpen] = useState(false);

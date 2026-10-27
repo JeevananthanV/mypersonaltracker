@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+mongoose.set('bufferCommands', false);
+
 export const getMongoConnectionConfig = () => {
   let uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/jeeva_life_os';
   const username = process.env.MONGODB_USERNAME;

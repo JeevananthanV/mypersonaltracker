@@ -308,6 +308,15 @@ export const initialCareerOverview: CareerOverview = {
   nextMilestone: 'Finish FastAPI deployment container and publish live demo.'
 };
 
+const getHabitDaysAgoStr = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const initialTasks: Task[] = [];
 
 export const initialHabits: Habit[] = [
@@ -315,41 +324,69 @@ export const initialHabits: Habit[] = [
     id: 'h-1',
     title: 'Morning review of top 3 daily priorities',
     category: 'routine',
-    streak: 0,
+    streak: 5,
     completedToday: false,
-    history: {}
+    history: {
+      [getHabitDaysAgoStr(5)]: true,
+      [getHabitDaysAgoStr(4)]: true,
+      [getHabitDaysAgoStr(3)]: true,
+      [getHabitDaysAgoStr(2)]: true,
+      [getHabitDaysAgoStr(1)]: true,
+    }
   },
   {
     id: 'h-2',
     title: 'Dedicated 60 mins AI/ML code practice',
     category: 'career',
-    streak: 0,
+    streak: 6,
     completedToday: false,
-    history: {}
+    history: {
+      [getHabitDaysAgoStr(6)]: true,
+      [getHabitDaysAgoStr(5)]: true,
+      [getHabitDaysAgoStr(4)]: true,
+      [getHabitDaysAgoStr(3)]: true,
+      [getHabitDaysAgoStr(2)]: true,
+      [getHabitDaysAgoStr(1)]: true,
+    }
   },
   {
     id: 'h-3',
     title: 'Log daily expenses before sleep',
     category: 'finance',
-    streak: 0,
+    streak: 4,
     completedToday: false,
-    history: {}
+    history: {
+      [getHabitDaysAgoStr(4)]: true,
+      [getHabitDaysAgoStr(3)]: true,
+      [getHabitDaysAgoStr(2)]: true,
+      [getHabitDaysAgoStr(1)]: true,
+    }
   },
   {
     id: 'h-4',
     title: 'Drink 2.5L water & light movement',
     category: 'health',
-    streak: 0,
+    streak: 5,
     completedToday: false,
-    history: {}
+    history: {
+      [getHabitDaysAgoStr(5)]: true,
+      [getHabitDaysAgoStr(4)]: true,
+      [getHabitDaysAgoStr(3)]: true,
+      [getHabitDaysAgoStr(2)]: true,
+      [getHabitDaysAgoStr(1)]: true,
+    }
   },
   {
     id: 'h-5',
     title: 'Sunday weekly review and next week setup',
     category: 'routine',
-    streak: 0,
+    streak: 3,
     completedToday: false,
-    history: {}
+    history: {
+      [getHabitDaysAgoStr(7)]: true,
+      [getHabitDaysAgoStr(3)]: true,
+      [getHabitDaysAgoStr(1)]: true,
+    }
   }
 ];
 
@@ -611,145 +648,6 @@ export const initialFitnessLogs: DailyFitnessLog[] = [];
 
 export const initialInvestments: InvestmentAsset[] = [
   {
-    id: 'pothys-digi-gold',
-    name: 'Pothys Swarna Mahal — Digi Gold (22K Plan)',
-    category: 'digi_gold',
-    platform: 'Pothys Swarna Mahal',
-    investedAmount: 500,
-    currentValue: 292,
-    quantity: 0.03954,
-    unitType: 'grams',
-    buyPriceAverage: 12645,
-    currentPrice: 7380,
-    isMonthlySip: false,
-    symbolOrCode: '22K-POTHYS-GOLD',
-    status: 'active',
-    purchaseDate: '2026-10-15',
-    colorTag: 'amber',
-    notes: 'Pothys Swarna Mahal 22K Gold Saving Plan. 300 days deposit tenure, 330 days maturity lock-in. Tiered instant gold bonus (7% in Days 0-75). Convert to physical 22K jewellery or coins.',
-    updatedAt: getLiveDateString(),
-    schemeDetails: {
-      planName: 'Pothys Swarna Mahal — 22K Gold Saving Plan',
-      purity: '22K (916 Hallmarked) Gold',
-      startDate: '2026-10-15',
-      depositTenureDays: 300,
-      lockInDays: 330,
-      maturityDate: '2027-09-10',
-      recommendedTarget: 11000,
-      baseWeightGrams: 0.03696,
-      bonusWeightGrams: 0.00258,
-      totalWeightGrams: 0.03954,
-      currentBonusTierPct: 7,
-      activeDayIndex: 11,
-      jewellerName: 'Pothys Swarna Mahal'
-    },
-    transactions: [
-      {
-        id: 'tx-gold-1',
-        date: '2026-10-15',
-        amount: 400,
-        rate: 13515,
-        weightGrams: 0.02960,
-        bonusWeightGrams: 0.00207,
-        bonusPercentage: 7,
-        docNo: 'APP27SCTM/1936226',
-        notes: 'Gold Saving Plan - 22K gold in 24 seconds'
-      },
-      {
-        id: 'tx-gold-2',
-        date: '2026-10-15',
-        amount: 100,
-        rate: 13590,
-        weightGrams: 0.00736,
-        bonusWeightGrams: 0.00052,
-        bonusPercentage: 7,
-        docNo: 'APP27SCTM Schemes Detail',
-        notes: 'Instant 7% Gold Bonus Credited'
-      }
-    ]
-  },
-  {
-    id: 'pothys-digi-silver',
-    name: 'Pothys Swarna Mahal — Digi Silver (999 Pure)',
-    category: 'silver_chit',
-    platform: 'Pothys Swarna Mahal',
-    investedAmount: 1100,
-    currentValue: 483,
-    quantity: 4.95431,
-    unitType: 'grams',
-    buyPriceAverage: 222,
-    currentPrice: 97.5,
-    isMonthlySip: false,
-    symbolOrCode: '999-POTHYS-SILVER',
-    status: 'active',
-    purchaseDate: '2026-10-14',
-    colorTag: 'cyan',
-    notes: 'Pothys Swarna Mahal 999 Pure Silver Saving Plan. 300 days deposit tenure, 330 days maturity lock-in. Tiered instant silver bonus (7% in Days 0-75). Convert to physical silver antique jewellery, pooja items, or 999 coins.',
-    updatedAt: getLiveDateString(),
-    schemeDetails: {
-      planName: 'Pothys Swarna Mahal — 999 Pure Silver Saving Plan',
-      purity: '999 Pure Silver',
-      startDate: '2026-10-14',
-      depositTenureDays: 300,
-      lockInDays: 330,
-      maturityDate: '2027-09-09',
-      recommendedTarget: 11000,
-      baseWeightGrams: 4.65690,
-      bonusWeightGrams: 0.29741,
-      totalWeightGrams: 4.95431,
-      currentBonusTierPct: 7,
-      activeDayIndex: 12,
-      jewellerName: 'Pothys Swarna Mahal'
-    },
-    transactions: [
-      {
-        id: 'tx-silver-1',
-        date: '2026-10-21',
-        amount: 500,
-        rate: 230,
-        weightGrams: 2.17391,
-        bonusWeightGrams: 0.15217,
-        bonusPercentage: 7,
-        docNo: 'APP27SCTM/1998979',
-        notes: 'App online transfer • 7% Instant Bonus'
-      },
-      {
-        id: 'tx-silver-2',
-        date: '2026-10-15',
-        amount: 400,
-        rate: 240,
-        weightGrams: 1.66667,
-        bonusWeightGrams: 0.11667,
-        bonusPercentage: 7,
-        docNo: 'APP27SCTM/1936258',
-        notes: 'App online transfer • 7% Instant Bonus'
-      },
-      {
-        id: 'tx-silver-3',
-        date: '2026-10-14',
-        amount: 100,
-        rate: 245,
-        weightGrams: 0.40816,
-        bonusWeightGrams: 0.00000,
-        bonusPercentage: 0,
-        docNo: 'APP27SCTM/1920578',
-        notes: 'Initial enrolment deposit'
-      },
-      {
-        id: 'tx-silver-4',
-        date: '2026-10-14',
-        amount: 100,
-        rate: 245,
-        weightGrams: 0.40816,
-        bonusWeightGrams: 0.02857,
-        bonusPercentage: 7,
-        docNo: 'APP27SCTM',
-        promoCode: 'PROMO CODE',
-        notes: 'Special Promo Code bonus deposit'
-      }
-    ]
-  },
-  {
     id: 'groww-itc',
     name: 'ITC Limited',
     category: 'groww_stocks',
@@ -887,77 +785,6 @@ export const initialInvestments: InvestmentAsset[] = [
         bonusPercentage: 0,
         docNo: 'GRT/SLM/2026/1010',
         notes: 'Month #6 Installment (UPI) — Next Due Month #7 on 10-Nov-2026'
-      }
-    ]
-  },
-  {
-    id: 'chit-lalitha-silver-11m',
-    name: 'Lalitha Thanga Maligai — 11-Month Silver Jewel Scheme',
-    category: 'silver_chit',
-    platform: 'Lalitha Thanga Maligai',
-    investedAmount: 12000,
-    currentValue: 13200,
-    quantity: 135.38,
-    unitType: 'grams',
-    buyPriceAverage: 88.64,
-    currentPrice: 97.5,
-    isMonthlySip: true,
-    monthlySipAmount: 3000,
-    chitMonthlyAmount: 3000,
-    chitTenureMonths: 11,
-    chitMonthsPaid: 4,
-    maturityBonus: 3000,
-    symbolOrCode: 'LTM-SLV-309114',
-    status: 'active',
-    purchaseDate: '2026-07-05',
-    maturityDate: '2027-06-05',
-    colorTag: 'cyan',
-    notes: 'Lalitha Thanga Maligai 11-Month Silver Jewel Savings Scheme ("Shett"). ₹3,000/month installment. Full 12th month installment paid by Lalitha as maturity bonus (+₹3,000). 0% Wastage / Making charges on all silver articles, pooja silver idols, and ornaments.',
-    updatedAt: getLiveDateString(),
-    transactions: [
-      {
-        id: 'tx-ltm-1',
-        date: '2026-07-05',
-        amount: 3000,
-        rate: 88.5,
-        weightGrams: 33.90,
-        bonusWeightGrams: 0,
-        bonusPercentage: 0,
-        docNo: 'LTM/SLM/2026/0705',
-        notes: 'Month #1 Enrollment Silver Shett (UPI)'
-      },
-      {
-        id: 'tx-ltm-2',
-        date: '2026-08-05',
-        amount: 3000,
-        rate: 89.2,
-        weightGrams: 33.63,
-        bonusWeightGrams: 0,
-        bonusPercentage: 0,
-        docNo: 'LTM/SLM/2026/0805',
-        notes: 'Month #2 Installment (GPay)'
-      },
-      {
-        id: 'tx-ltm-3',
-        date: '2026-09-05',
-        amount: 3000,
-        rate: 93.0,
-        weightGrams: 32.26,
-        bonusWeightGrams: 0,
-        bonusPercentage: 0,
-        docNo: 'LTM/SLM/2026/0905',
-        notes: 'Month #3 Installment (NetBanking)'
-      },
-      {
-        id: 'tx-ltm-4',
-        date: '2026-10-05',
-        amount: 3000,
-        rate: 97.5,
-        weightGrams: 30.77,
-        bonusWeightGrams: 0,
-        bonusPercentage: 0,
-        docNo: 'LTM/SLM/2026/1005',
-        notes: 'Month #4 Installment (UPI) — Next Due Month #5 on 05-Nov-2026'
       }
     ]
   },

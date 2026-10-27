@@ -48,6 +48,12 @@ import {
   initialIncomeStreams
 } from '../data/initialData';
 import { getLiveDateString, getYesterdayDateString } from '../utils/date-utils';
+import {
+  SalemDailyRate,
+  fetchLiveSalemGoldRate,
+  getTodaySalemRate,
+  updateTodaySalemRate
+} from '../services/salemBullionService';
 
 interface LifeOSContextType {
   activeTab: NavTab;
@@ -62,6 +68,12 @@ interface LifeOSContextType {
   openQuickAdd: (type?: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea') => void;
   salary: number;
   setSalary: (salary: number) => void;
+
+  // Salem Tamil Nadu Live Bullion Monitoring
+  salemRate: SalemDailyRate;
+  isFetchingSalemRate: boolean;
+  refreshSalemGoldRate: () => Promise<void>;
+  updateSalemRate: (gold22k: number, silver1g: number) => void;
 
   // Multi-Stream Income & Earnings Monitor
   incomeStreams: IncomeItem[];
@@ -180,6 +192,9 @@ interface LifeOSContextType {
   toggleTopThree: (id: string) => void;
   habits: Habit[];
   toggleHabitToday: (id: string) => void;
+  toggleHabitDate: (id: string, dateStr: string) => void;
+  addHabit: (habit: Omit<Habit, 'id'>) => void;
+  deleteHabit: (id: string) => void;
 
   // Fitness
   fitnessProfile: FitnessProfile;
@@ -229,8 +244,16 @@ interface LifeOSContextType {
   resetToCleanRealState: () => void;
 }
 
-// Version 10 storage key with monthly fixed ₹2,000 interest rule for all loans & zero day interest calculation
-const STORAGE_KEY = 'jeeva_life_os_real_zero_v10';
+// Version 12 storage key: strictly 3 loans, 3 chits, 2 stocks & Salem Tamil Nadu gold rate monitor
+const STORAGE_KEY = 'jeeva_life_os_v12_salem_clean';
+const ALLOWED_INVESTMENT_IDS = [
+  'groww-itc',
+  'groww-tatagold',
+  'chit-grt-gold-11m',
+  'chit-saravana-fund-20m',
+  'chit-offline-monthly-1000'
+];
+const ALLOWED_LOAN_IDS = ['loan-1', 'loan-2', 'loan-3'];
 
 const LifeOSContext = createContext<LifeOSContextType | undefined>(undefined);
 
@@ -241,6 +264,31 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [quickAddDefaultType, setQuickAddDefaultType] = useState<
     'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea'
   >('expense');
+
+  // Salem Bullion Live Rate State
+  const [salemRate, setSalemRate] = useState<SalemDailyRate>(() => getTodaySalemRate());
+  const [isFetchingSalemRate, setIsFetchingSalemRate] = useState<boolean>(false);
+
+  const refreshSalemGoldRate = async () => {
+    setIsFetchingSalemRate(true);
+    try {
+      const live = await fetchLiveSalemGoldRate();
+      setSalemRate(live);
+    } catch (e) {
+      console.warn('Failed to refresh Salem Gold rate', e);
+    } finally {
+      setIsFetchingSalemRate(false);
+    }
+  };
+
+  const updateSalemRate = (gold22k: number, silver1g: number) => {
+    const updated = updateTodaySalemRate(gold22k, silver1g);
+    setSalemRate(updated);
+  };
+
+  useEffect(() => {
+    refreshSalemGoldRate();
+  }, []);
 
   const openQuickAdd = (type?: 'expense' | 'loan' | 'basic_need' | 'investment' | 'task' | 'fitness' | 'learning' | 'idea') => {
     if (type) {
@@ -272,14 +320,16 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Guarantee no dummy mock investments (keep authentic chits, jeweller schemes, stocks, and daily schemes)
+        // Strictly keep only the 3 chits and 2 stocks requested
         if (parsed.investments && Array.isArray(parsed.investments)) {
           parsed.investments = parsed.investments.filter((i: any) =>
-            !['inv-1', 'inv-2', 'inv-3', 'inv-4', 'inv-5', 'inv-6'].includes(i.id) &&
-            !i.name?.includes('MMTC-PAMP') &&
-            !i.name?.includes('Tata Motors') &&
-            !i.name?.includes('Parag Parikh') &&
-            !i.name?.includes('Nippon India')
+            ALLOWED_INVESTMENT_IDS.includes(i.id)
+          );
+        }
+        // Strictly keep only the 3 loans
+        if (parsed.loanAccounts && Array.isArray(parsed.loanAccounts)) {
+          parsed.loanAccounts = parsed.loanAccounts.filter((l: any) =>
+            ALLOWED_LOAN_IDS.includes(l.id)
           );
         }
         // Guarantee no dummy mock basic needs
@@ -349,15 +399,28 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [investments, setInvestments] = useState<InvestmentAsset[]>(() => {
     const raw = savedData?.investments;
     if (raw && Array.isArray(raw) && raw.length > 0) {
-      const missingInitial = initialInvestments.filter(init => !raw.some((r: any) => r.id === init.id));
-      return [...raw, ...missingInitial];
+      const filtered = raw.filter((r: any) => ALLOWED_INVESTMENT_IDS.includes(r.id));
+      const missingInitial = initialInvestments.filter(init => !filtered.some((r: any) => r.id === init.id));
+      return [...filtered, ...missingInitial];
     }
     return initialInvestments;
   });
   const [skills, setSkills] = useState<SkillModule[]>(savedData?.skills || initialSkills);
   const [careerOverview, setCareerOverview] = useState<CareerOverview>(savedData?.careerOverview || initialCareerOverview);
   const [tasks, setTasks] = useState<Task[]>(savedData?.tasks || initialTasks);
-  const [habits, setHabits] = useState<Habit[]>(savedData?.habits || initialHabits);
+  const [habits, setHabits] = useState<Habit[]>(() => {
+    const raw = savedData?.habits;
+    if (raw && Array.isArray(raw) && raw.length > 0) {
+      return raw.map((h: Habit) => {
+        const init = initialHabits.find(ih => ih.id === h.id);
+        if ((!h.history || Object.keys(h.history).length === 0) && init?.history) {
+          return { ...h, history: init.history, streak: h.streak || init.streak };
+        }
+        return h;
+      });
+    }
+    return initialHabits;
+  });
   const [fitnessProfile, setFitnessProfile] = useState<FitnessProfile>(savedData?.fitnessProfile || initialFitnessProfile);
   const [fitnessLogs, setFitnessLogs] = useState<DailyFitnessLog[]>(savedData?.fitnessLogs || initialFitnessLogs);
   const [projects, setProjects] = useState<Project[]>(savedData?.projects || initialProjects);
@@ -1873,22 +1936,86 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Habits
+  const calculateHabitStreak = (history: Record<string, boolean>, todayDone: boolean, todayStr: string): number => {
+    let count = 0;
+    const isTodayDone = history[todayStr] ?? todayDone;
+
+    const checkDate = new Date();
+    if (!isTodayDone) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    for (let i = 0; i < 365; i++) {
+      const year = checkDate.getFullYear();
+      const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+      const day = String(checkDate.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+      
+      if (history[dateKey]) {
+        count++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return count;
+  };
+
   const toggleHabitToday = (id: string) => {
     const today = getLiveDateString();
     setHabits(prev => prev.map(h => {
       if (h.id === id) {
         const nextCompleted = !h.completedToday;
-        const nextStreak = nextCompleted ? h.streak + 1 : Math.max(0, h.streak - 1);
+        const newHistory = { ...(h.history || {}), [today]: nextCompleted };
+        const nextStreak = calculateHabitStreak(newHistory, nextCompleted, today);
         if (nextCompleted) triggerConfetti();
         return {
           ...h,
           completedToday: nextCompleted,
           streak: nextStreak,
-          history: { ...h.history, [today]: nextCompleted }
+          history: newHistory
         };
       }
       return h;
     }));
+  };
+
+  const toggleHabitDate = (id: string, dateStr: string) => {
+    const today = getLiveDateString();
+    setHabits(prev => prev.map(h => {
+      if (h.id === id) {
+        const isCurrentlyCompleted = Boolean(h.history?.[dateStr]);
+        const nextCompleted = !isCurrentlyCompleted;
+        const newHistory = { ...(h.history || {}), [dateStr]: nextCompleted };
+        const isToday = dateStr === today;
+        const nextCompletedToday = isToday ? nextCompleted : h.completedToday;
+        const nextStreak = calculateHabitStreak(newHistory, nextCompletedToday, today);
+        if (nextCompleted) triggerConfetti();
+        return {
+          ...h,
+          completedToday: nextCompletedToday,
+          streak: nextStreak,
+          history: newHistory
+        };
+      }
+      return h;
+    }));
+  };
+
+  const addHabit = (habitData: Omit<Habit, 'id'>) => {
+    const newHabit: Habit = {
+      ...habitData,
+      id: 'h-' + Date.now(),
+      streak: habitData.streak || 0,
+      completedToday: habitData.completedToday || false,
+      history: habitData.history || {}
+    };
+    setHabits(prev => [...prev, newHabit]);
+    triggerConfetti();
+  };
+
+  const deleteHabit = (id: string) => {
+    setHabits(prev => prev.filter(h => h.id !== id));
   };
 
   // Fitness
@@ -2058,6 +2185,11 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         openQuickAdd,
         salary,
         setSalary,
+        // Salem Live Gold Rates
+        salemRate,
+        isFetchingSalemRate,
+        refreshSalemGoldRate,
+        updateSalemRate,
         incomeStreams,
         addIncomeStream,
         updateIncomeStream,
@@ -2130,6 +2262,9 @@ export const LifeOSProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toggleTopThree,
         habits,
         toggleHabitToday,
+        toggleHabitDate,
+        addHabit,
+        deleteHabit,
         fitnessProfile,
         updateFitnessProfile,
         fitnessLogs,

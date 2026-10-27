@@ -1,0 +1,8 @@
+{
+  "name": "Jeeva's Life OS | Personal Command Center",
+  "description": "Jeeva's Life OS — All-in-One Personal Command Center for AI/ML career, finance, loan repayment, fitness, daily productivity, and software projects.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "permissions": []
+}

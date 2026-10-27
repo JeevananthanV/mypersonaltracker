@@ -14,14 +14,14 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { WeeklyReviewPage } from './pages/WeeklyReviewPage';
 import { IdeasPage } from './pages/IdeasPage';
 import { DigiGoldPage } from './pages/DigiGoldPage';
-import { DigiSilverPage } from './pages/DigiSilverPage';
+import { SalemGoldSheetPage } from './pages/SalemGoldSheetPage';
 import { GrowwStocksPage } from './pages/GrowwStocksPage';
 import { ChitSchemesPage } from './pages/ChitSchemesPage';
-import { MutualFundsPage } from './pages/MutualFundsPage';
 import { DailyExpensePage } from './pages/DailyExpensePage';
 import { WeightTrackerPage } from './pages/WeightTrackerPage';
 import { DailyPayChitPage } from './pages/DailyPayChitPage';
 import { IncomeMonitorPage } from './pages/IncomeMonitorPage';
+import { GoogleCalendarPage } from './pages/GoogleCalendarPage';
 
 const AppContent: React.FC = () => {
   const {
@@ -37,6 +37,8 @@ const AppContent: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage />;
+      case 'salem_gold_sheet':
+        return <SalemGoldSheetPage />;
       case 'loans':
       case 'loan_waterfall':
       case 'loan_amortization':
@@ -44,19 +46,17 @@ const AppContent: React.FC = () => {
       case 'loan_simulator':
         return <LoansDashboardPage />;
       case 'investments':
-        return <InvestmentsPage />;
-      case 'digi_gold':
-        return <DigiGoldPage />;
-      case 'digi_silver':
-        return <DigiSilverPage />;
+        return <SalemGoldSheetPage />;
       case 'groww_stocks':
         return <GrowwStocksPage />;
       case 'chits':
         return <ChitSchemesPage />;
       case 'daily_chit':
         return <DailyPayChitPage />;
+      case 'digi_gold':
+      case 'digi_silver':
       case 'mutual_funds':
-        return <MutualFundsPage />;
+        return <SalemGoldSheetPage />;
       case 'finance':
       case 'basic_needs':
         return <FinancePage />;
@@ -81,6 +81,8 @@ const AppContent: React.FC = () => {
         return <WeeklyReviewPage />;
       case 'ideas':
         return <IdeasPage />;
+      case 'calendar':
+        return <GoogleCalendarPage />;
       default:
         return <DashboardPage />;
     }
@@ -125,6 +127,8 @@ const AppContent: React.FC = () => {
               <span className="text-slate-300">Salary: ₹34,000/mo</span>
               <span className="text-slate-600">•</span>
               <span className="text-rose-400 font-semibold">3 Loans: ₹2.40L</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-amber-400">3 Chits & 2 Stocks</span>
               <span className="text-slate-600">•</span>
               <span className="text-emerald-400">Weight: 57 kg</span>
             </div>
